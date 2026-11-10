@@ -1,0 +1,8 @@
+@page "/services"
+<PageTitle>Услуги · Пульс</PageTitle>
+<section class="container section page-top"><span class="eyebrow">Найди своё движение</span><h1>УСЛУГИ КЛУБА</h1><p class="page-lead">Силовые тренировки, плавание и спокойные практики. Выбирай по настроению и цели.</p><div class="filter-tabs" aria-label="Фильтр по направлению">@foreach (var item in categories) { <button class="@(category == item ? "selected" : "")" @onclick="() => category = item">@item</button> }</div><div class="service-grid">@foreach (var service in ClubCatalog.Services.Where(x => category == "Все" || x.Category == category)) { <ServiceCard Service="service" /> }</div></section>
+@code {
+    private string category = "Все";
+    private readonly string[] categories = ["Все", .. ClubCatalog.Services.Select(x => x.Category).Distinct()];
+}
+

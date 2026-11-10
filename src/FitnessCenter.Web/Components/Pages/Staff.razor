@@ -1,0 +1,86 @@
+@page "/staff"
+@attribute [Authorize(Roles = Roles.Staff)]
+@inject StaffService StaffService
+@inject AuthenticationStateProvider Authentication
+@inject CatalogService Catalog
+@inject ClubClock Clock
+<PageTitle>Панель управления · Пульс</PageTitle>
+<section class="container section page-top"><span class="eyebrow">Работа клуба</span><h1>@(isAdmin ? "ПАНЕЛЬ АДМИНИСТРАТОРА" : "ПАНЕЛЬ МЕНЕДЖЕРА")</h1><div class="row-actions"><a class="text-link" href="/cabinet">Личный кабинет</a></div><AuthorizeView Roles="@Roles.Admin"><Authorized><AdminLinks /></Authorized></AuthorizeView>
+<div class="staff-tabs">@foreach (var t in tabs) { <button class="@(tab == t ? "selected" : "")" @onclick="() => Switch(t)">@t</button> }</div>
+@if (result is not null) { <div class="notice @(result.Success ? "" : "error")" role="status">@result.Message</div> }
+@if (loading) { <p role="status">Загружаем данные…</p> } else if (tab == "Записи") {
+<form class="row-actions" @onsubmit="FilterBookings" @onsubmit:preventDefault>
+    <div><label for="staff-booking-search">Клиент, услуга или тренер</label><input id="staff-booking-search" type="search" maxlength="100" @bind="bookingSearch" /></div>
+    <div><label for="staff-booking-status">Статус записи</label><select id="staff-booking-status" @bind="bookingFilter">
+        <option value="">Все статусы</option>
+        @foreach (var status in Enum.GetValues<BookingStatus>())
+        {
+            <option value="@status">@status.Label()</option>
+        }
+    </select></div>
+    <button class="button button-small" type="submit" disabled="@busy">Найти</button>
+</form>
+<div class="table-wrap"><table><thead><tr><th>Клиент</th><th>Занятие</th><th>Время</th><th>Статус</th><th>Действия</th></tr></thead><tbody>@foreach (var b in bookings) { <tr><td>@b.User.FullName<br /><span class="small">@b.User.Email</span></td><td>@b.Session.Service.Name<br /><span class="small">@b.Session.Trainer.Name</span>@if (b.Comment.Length > 0) { <p class="small">Комментарий: @b.Comment</p> }</td><td>@Clock.Local(b.Session.StartsAtUtc).ToString("dd.MM HH:mm")</td><td>@b.Status.Label()</td><td><div class="table-actions">@if (b.Status == BookingStatus.Pending && b.Session.StartsAtUtc > DateTime.UtcNow) { <button class="button button-small" disabled="@busy" @onclick="() => Status(b.Id, BookingStatus.Confirmed)">Подтвердить</button><button class="link-button" disabled="@busy" @onclick="() => Status(b.Id, BookingStatus.Rejected)">Отклонить</button> }@if (b.Status == BookingStatus.Confirmed && b.Session.EndsAtUtc <= DateTime.UtcNow) { <button class="button button-small" disabled="@busy" @onclick="() => Status(b.Id, BookingStatus.Attended)">Посещено</button><button class="link-button" disabled="@busy" @onclick="() => Status(b.Id, BookingStatus.NoShow)">Неявка</button> }@if (b.Status.IsActive() && b.Session.StartsAtUtc > DateTime.UtcNow) { <button class="link-button" disabled="@busy" @onclick="() => Status(b.Id, BookingStatus.Cancelled)">Отменить</button> }</div></td></tr> }</tbody></table></div>@if (bookings.Count == 0) { <p>Записи по этим условиям не найдены.</p> }
+} else if (tab == "Отзывы") {
+@foreach (var r in reviews) { <article class="booking-card"><h3>@r.Booking.User.FullName · @r.Rating из 5</h3><p>@r.Text</p><span class="status">@(r.IsPublished ? "Опубликован" : "На модерации")</span><AuthorizeView Roles="@Roles.Admin"><Authorized><button class="link-button" disabled="@busy" @onclick="() => Moderate(r.Id, !r.IsPublished)">@(r.IsPublished ? "Снять с публикации" : "Опубликовать")</button>
+@if (r.IsPublished)
+{
+    <button class="link-button" disabled="@busy" @onclick="() => FeatureReview(r.Id, !r.IsFeatured)">
+        @(r.IsFeatured ? "Убрать с главной" : "Показать на главной")
+    </button>
+}
+</Authorized></AuthorizeView></article> }
+} else if (tab == "Обращения" && isAdmin) {
+@foreach (var m in feedback) { <article class="booking-card"><h3>@m.Name</h3><p>@m.Email</p><p>@m.Text</p>@if (m.IsProcessed) { <span class="status">Обработано</span> } else { <button class="button button-small" disabled="@busy" @onclick="() => Process(m.Id)">Отметить обработанным</button> }</article> }
+} else if (tab == "Расписание" && isAdmin) {
+<form class="form-panel staff-form" @onsubmit="AddSession" @onsubmit:preventDefault><h2>@(sessionId is null ? "Новое занятие" : "Редактирование занятия")</h2><label for="staff-service">Услуга</label><select id="staff-service" @bind="serviceId" @bind:after="() => trainerId = 0"><option value="0">Выберите услугу</option>@foreach (var s in services) { <option value="@s.Id">@s.Name</option> }</select><label for="staff-trainer">Тренер</label><select id="staff-trainer" @bind="trainerId"><option value="0">Выберите тренера</option>@foreach (var t in trainers.Where(t => t.Services.Any(s => s.Id == serviceId))) { <option value="@t.Id">@t.Name · @t.Specialty</option> }</select><label for="staff-start">Дата и время по Ижевску</label><input id="staff-start" type="datetime-local" @bind="start" /><label for="staff-capacity">Число мест</label><input id="staff-capacity" type="number" min="1" max="100" @bind="capacity" /><button class="button" type="submit" disabled="@busy">@(sessionId is null ? "Добавить занятие" : "Сохранить занятие")</button>@if (sessionId is not null) { <button class="link-button" type="button" disabled="@busy" @onclick="ResetSession">Закрыть редактирование</button> }</form>
+<h2 class="panel-title">Ближайшие занятия</h2>
+@if (sessionToCancel is { } cancellation)
+{
+    <div class="notice error" role="group" aria-label="Подтверждение отмены занятия">
+        <p>Отменить занятие «@cancellation.Service.Name» на @Clock.Local(cancellation.StartsAtUtc).ToString("dd.MM HH:mm")? Клиенты с активной записью получат уведомление.</p>
+        <button class="button button-small" type="button" disabled="@busy" @onclick="() => CancelSession(cancellation.Id)">Подтвердить отмену</button>
+        <button class="link-button" type="button" disabled="@busy" @onclick="() => sessionToCancel = null">Оставить занятие</button>
+    </div>
+}<div class="table-wrap"><table><thead><tr><th>Дата</th><th>Занятие</th><th>Тренер</th><th>Места</th><th></th></tr></thead><tbody>@foreach (var s in sessions) { <tr><td>@Clock.Local(s.StartsAtUtc).ToString("dd.MM HH:mm")</td><td>@s.Service.Name</td><td>@s.Trainer.Name</td><td>@s.Bookings.Count / @s.Capacity</td><td><div class="table-actions"><button class="link-button" disabled="@busy" @onclick="() => EditSession(s)">Изменить</button><button class="link-button" disabled="@busy" @onclick="() => sessionToCancel = s">Отменить занятие</button></div></td></tr> }</tbody></table></div>
+}</section>
+@code {
+    private ClaimsPrincipal user = new(); private bool isAdmin; private bool loading = true; private bool busy; private string tab = "Записи"; private string[] tabs = ["Записи", "Отзывы"];
+    private string bookingSearch = ""; private BookingStatus? bookingFilter;
+    private List<Booking> bookings = []; private List<Review> reviews = []; private List<FeedbackMessage> feedback = [];
+    private List<FitnessService> services = []; private List<Trainer> trainers = []; private List<TrainingSession> sessions = [];
+    private TrainingSession? sessionToCancel; private int? sessionId; private int serviceId; private int trainerId; private int capacity = 8; private DateTime start; private OperationResult? result;
+    protected override async Task OnInitializedAsync() { user = (await Authentication.GetAuthenticationStateAsync()).User; isAdmin = user.IsInRole(Roles.Admin); if (isAdmin) tabs = [.. tabs, "Обращения", "Расписание"]; start = Clock.Now.Date.AddDays(1).AddHours(10); await Load(); }
+    private async Task Switch(string t) { if (busy || loading) return; tab = t; result = null; sessionToCancel = null; await Load(); }
+    private async Task Load() { loading = true; if (tab == "Записи") bookings = await StaffService.BookingsAsync(user, bookingFilter, bookingSearch); else if (tab == "Отзывы") reviews = await StaffService.ReviewsAsync(user); else if (tab == "Обращения") feedback = await StaffService.FeedbackAsync(user); else { services = await Catalog.ServicesAsync(); trainers = await Catalog.TrainersAsync(); sessions = await StaffService.UpcomingSessionsAsync(user); } loading = false; }
+    private async Task Run(Func<Task> action) { if (busy) return; busy = true; try { await action(); await Load(); } finally { busy = false; } }
+    private Task FilterBookings() => Run(() => { result = null; return Task.CompletedTask; });
+    private Task Status(int id, BookingStatus s) => Run(async () => result = await StaffService.SetStatusAsync(user, id, s));
+    private Task Moderate(int id, bool publish) => Run(async () => result = await StaffService.SetReviewPublicationAsync(user, id, publish));
+    private Task FeatureReview(int id, bool featured) => Run(async () => result = await StaffService.SetReviewFeaturedAsync(user, id, featured));
+    private Task Process(int id) => Run(async () => { await StaffService.ProcessFeedbackAsync(user, id); result = new(true, "Обращение обработано."); });
+    private Task AddSession() => Run(async () =>
+    {
+        result = await StaffService.SaveSessionAsync(user, sessionId, serviceId, trainerId, Clock.Utc(start), capacity);
+        if (result.Success) ResetSession();
+    });
+
+    private void EditSession(TrainingSession session)
+    {
+        sessionId = session.Id;
+        serviceId = session.ServiceId;
+        trainerId = session.TrainerId;
+        start = Clock.Local(session.StartsAtUtc);
+        capacity = session.Capacity;
+        result = null;
+    }
+
+    private void ResetSession()
+    {
+        sessionId = null;
+        serviceId = trainerId = 0;
+        start = Clock.Now.Date.AddDays(1).AddHours(10);
+        capacity = 8;
+    }
+    private Task CancelSession(int id) => Run(async () => { result = await StaffService.CancelSessionAsync(user, id); if (!result.Success) return; sessionToCancel = null; if (sessionId == id) ResetSession(); });
+}

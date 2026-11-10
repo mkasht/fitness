@@ -1,0 +1,92 @@
+@page "/admin/users"
+@attribute [Authorize(Roles = Roles.Admin)]
+@inject UserAdminService Admin
+@inject AuthenticationStateProvider Authentication
+
+<PageTitle>Пользователи и роли · Пульс</PageTitle>
+<section class="container section page-top">
+    <span class="eyebrow">Администрирование</span>
+    <h1>Пользователи и роли</h1>
+    <AdminLinks />
+    <label for="user-search">Поиск по имени, почте или телефону</label>
+    <input id="user-search" type="search" @bind="search" @bind:event="oninput" />
+    @if (result is not null)
+    {
+        <p class="notice @(result.Success ? "" : "error")" role="status">@result.Message</p>
+    }
+    @if (selected is not null)
+    {
+        <form class="form-panel staff-form" @onsubmit="Save" @onsubmit:preventDefault>
+            <h2>@selected.Email</h2>
+            <label for="managed-name">Имя</label>
+            <input id="managed-name" required maxlength="100" @bind="name" />
+            <label for="managed-phone">Телефон</label>
+            <input id="managed-phone" type="tel" maxlength="30" @bind="phone" />
+            <label for="managed-role">Роль</label>
+            <select id="managed-role" @bind="role" disabled="@(selected.Id == BookingService.UserId(actor))">
+                <option value="">Выберите роль</option>
+                @foreach (var item in new[] { Roles.Admin, Roles.Manager, Roles.User })
+                {
+                    <option value="@item">@UserAdminService.RoleLabel(item)</option>
+                }
+            </select>
+            <button class="button" type="submit" disabled="@busy">Сохранить пользователя</button>
+            <button class="link-button" type="button" disabled="@busy" @onclick="() => selected = null">Закрыть</button>
+        </form>
+    }
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Имя</th><th>Email</th><th>Телефон</th><th>Роль</th><th></th></tr></thead>
+            <tbody>
+                @foreach (var user in FilteredUsers)
+                {
+                    <tr><td>@user.Name</td><td>@user.Email</td><td>@user.Phone</td><td>@UserAdminService.RoleLabel(user.Role)</td>
+                        <td><button class="link-button" type="button" disabled="@busy" @onclick="() => Edit(user)">Изменить</button></td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (!FilteredUsers.Any()) { <p>Пользователи не найдены.</p> }
+</section>
+
+@code {
+    private ClaimsPrincipal actor = new();
+    private List<ManagedUser> users = [];
+    private ManagedUser? selected;
+    private string search = "", name = "", phone = "", role = "";
+    private bool busy;
+    private OperationResult? result;
+    private IEnumerable<ManagedUser> FilteredUsers => users.Where(user =>
+        user.Name.Contains(search.Trim(), StringComparison.CurrentCultureIgnoreCase) ||
+        user.Email.Contains(search.Trim(), StringComparison.OrdinalIgnoreCase) ||
+        user.Phone.Contains(search.Trim(), StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
+    {
+        actor = (await Authentication.GetAuthenticationStateAsync()).User;
+        users = await Admin.LoadAsync(actor);
+    }
+
+    private void Edit(ManagedUser user)
+    {
+        selected = user;
+        name = user.Name;
+        phone = user.Phone;
+        role = user.Role;
+        result = null;
+    }
+
+    private async Task Save()
+    {
+        if (busy || selected is null) return;
+        busy = true;
+        try
+        {
+            result = await Admin.SaveAsync(actor, selected with { Name = name, Phone = phone, Role = role });
+            if (!result.Success) return;
+            selected = null;
+            users = await Admin.LoadAsync(actor);
+        }
+        finally { busy = false; }
+    }
+}

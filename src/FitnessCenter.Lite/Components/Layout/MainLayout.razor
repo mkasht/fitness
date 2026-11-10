@@ -1,0 +1,20 @@
+@inherits LayoutComponentBase
+<a class="skip-link" href="#main">Перейти к содержимому</a>
+<header class="site-header"><div class="container header-inner">
+    <a href="/" class="brand" aria-label="Пульс, главная"><span class="brand-mark">п</span>пульс<span class="brand-caption">фитнес-клуб</span></a>
+    <details class="mobile-menu" open="@menuOpen"><summary aria-label="Открыть меню" @onclick="ToggleMenu" @onclick:preventDefault>Меню</summary><nav @onclick="CloseMenu"><SiteLinks /></nav></details>
+    <nav class="desktop-nav" aria-label="Главная навигация"><SiteLinks /></nav>
+</div></header>
+<main id="main">@Body</main>
+<footer class="site-footer"><div class="container footer-top">
+    <div><a class="brand" href="/"><span class="brand-mark">п</span>пульс</a><p>Движение, которое становится<br />частью твоей жизни.</p></div>
+    <nav aria-label="Навигация в подвале"><SiteLinks /></nav>
+    <div><p>Ежедневно: 07:00–23:00<br />Самара</p></div>
+</div><div class="container footer-bottom"><span>© @DateTime.Now.Year Пульс</span><span>Учебный проект. Данные клуба демонстрационные.</span></div></footer>
+<div id="blazor-error-ui" role="alert">Не удалось обновить страницу. <a href="" class="reload">Обновить</a><button class="dismiss" aria-label="Закрыть">×</button></div>
+@code {
+    private bool menuOpen;
+    private void ToggleMenu() => menuOpen = !menuOpen;
+    private void CloseMenu() => menuOpen = false;
+}
+

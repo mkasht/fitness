@@ -1,0 +1,306 @@
+:root {
+    --bg: #faf9f6;
+    --ink: #1b1917;
+    --muted: #625c55;
+    --accent: #ad341d;
+    --line: #ded8ce;
+    --soft: #efebe4;
+    --signal: #ff6338;
+    --signal-hover: #ff815e;
+    --dark: #1f1c19;
+    --display: Bahnschrift, "Arial Narrow", "Segoe UI", sans-serif;
+}
+
+h1, h2 { font-family: var(--display); font-weight: 750; text-wrap: balance; }
+h1 { line-height: .99; }
+h2 { line-height: 1.04; }
+p { text-wrap: pretty; }
+.eyebrow { font-size: .72rem; letter-spacing: .13em; margin-bottom: 16px; }
+.button, .btn {
+    background: var(--signal);
+    border-color: var(--signal);
+    border-radius: 3px;
+    color: var(--ink);
+    min-height: 44px;
+    transition: background-color .18s, border-color .18s, transform .18s;
+}
+.button:hover, .btn:hover { background: var(--signal-hover); border-color: var(--signal-hover); }
+.button:active, .btn:active { transform: translateY(1px); }
+.button-outline { background: transparent; border-color: var(--ink); }
+.button-outline:hover { background: var(--ink); color: white; border-color: var(--ink); }
+.text-link:hover { color: var(--accent); }
+:focus-visible { outline-color: #ae361c; }
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.site-header { background: var(--bg); }
+.header-inner { height: 76px; gap: clamp(12px, 1.8vw, 26px); }
+.brand {
+    gap: 11px;
+    font-family: var(--display);
+    font-size: 1.75rem;
+    line-height: .9;
+    letter-spacing: -.06em;
+}
+.brand-mark {
+    width: 39px;
+    height: 39px;
+    background: var(--signal);
+    color: var(--ink);
+    border-radius: 3px;
+    padding: 0;
+    transform: none;
+    flex: none;
+}
+.brand-caption {
+    display: block;
+    margin: 4px 0 0 1px;
+    font-size: .62rem;
+    line-height: 1;
+    color: var(--muted);
+}
+.desktop-nav { gap: clamp(14px, 2vw, 30px); font-weight: 600; white-space: nowrap; }
+.desktop-nav a:hover, .mobile-menu nav a.active { color: var(--accent); }
+.account-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 42px;
+    gap: 8px;
+    border: 1px solid var(--line);
+    padding: 0 12px;
+    border-radius: 3px;
+}
+.account-link:hover, .mobile-menu summary:hover { border-color: var(--ink); }
+.account-link svg, .mobile-menu summary svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 1.6; }
+.mobile-menu summary {
+    display: grid;
+    place-items: center;
+    list-style: none;
+    width: 42px;
+    height: 42px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+}
+.mobile-menu summary::-webkit-details-marker { display: none; }
+.mobile-menu nav { top: calc(100% + 12px); border: 1px solid var(--line); }
+.mobile-menu nav a { padding: 5px 0; }
+
+.club-slide {
+    position: relative;
+    isolation: isolate;
+    background: var(--dark);
+    color: var(--bg);
+    overflow: hidden;
+}
+.club-slide-photo, .club-slide::after {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+.club-slide-photo { z-index: -2; object-fit: cover; object-position: center 35%; }
+.strength-slide { object-position: center 7%; }
+.studio-slide, .pool-slide { opacity: 0; }
+.studio-slide { animation: banner-studio 30s linear 10s infinite; }
+.pool-slide { animation: banner-pool 30s linear 20s infinite; }
+.club-slide::after {
+    content: "";
+    z-index: -1;
+    background: radial-gradient(ellipse at center, #181614dc 0%, #181614a8 44%, #18161437 92%);
+}
+.slide-inner {
+    min-height: clamp(500px, 43vw, 650px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding-block: 50px;
+}
+.slide-copy { position: relative; z-index: 1; text-align: center; }
+.slide-copy .eyebrow, .booking-preview .eyebrow { color: #ff926e; }
+.slide-copy .eyebrow { margin-bottom: clamp(17px, 2vw, 29px); }
+.slide-copy .eyebrow::before {
+    content: "";
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 10px;
+    width: 22px;
+    height: 2px;
+    background: currentColor;
+}
+.slide-copy h1 {
+    margin-bottom: 20px;
+    font-size: clamp(3.8rem, 7.4vw, 7.25rem);
+    line-height: .91;
+    letter-spacing: -.065em;
+    text-transform: uppercase;
+}
+.slide-copy h1 span { display: block; color: var(--signal); }
+.slide-copy p { max-width: 42ch; margin: 0 auto 26px; color: #f0e9e2; font-size: clamp(.95rem, 1.3vw, 1.15rem); }
+.slide-action { min-width: 220px; }
+.slide-track {
+    width: clamp(155px, 21vw, 330px);
+    position: absolute;
+    bottom: -30px;
+    right: -15px;
+    color: var(--signal);
+    stroke: currentColor;
+    stroke-width: 1.25;
+    opacity: .68;
+}
+/* The gym photo stays underneath. Keep the studio visible until the pool has faded in. */
+@keyframes banner-studio {
+    0%, 36.667%, 100% { opacity: 0; }
+    1.667%, 35% { opacity: 1; }
+}
+@keyframes banner-pool {
+    0%, 35%, 100% { opacity: 0; }
+    1.667%, 33.333% { opacity: 1; }
+}
+
+.section-heading h2 { font-size: clamp(2rem, 4.5vw, 4.1rem); }
+.home-services .service-grid { grid-template-columns: 1.24fr 1fr 1fr; }
+.service-card { display: flex; flex-direction: column; min-width: 0; }
+.service-image, .trainer-image, .detail-image, .about-preview > img { border-radius: 3px; background: var(--soft); }
+.home-services .service-image { height: clamp(155px, 22vw, 330px); }
+.service-card-body { border-bottom: 1px solid var(--line); padding: 16px 0 17px; display: flex; flex-direction: column; flex: 1; }
+.service-card h3, .trainer-info h3 { font-size: clamp(1.08rem, 1.65vw, 1.55rem); }
+.service-card h3 span { color: var(--accent); padding-left: 6px; }
+.service-card p { min-height: 0; }
+.price { margin-top: auto; }
+.home-about { background: var(--soft); }
+.about-preview h2 { font-size: clamp(2rem, 4.1vw, 4.2rem); text-wrap: balance; }
+.about-preview p { font-size: 1rem; }
+.about-preview .text-link { display: inline-block; margin-top: 12px; }
+.about-sections { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 35px; margin-top: 55px; }
+.about-sections > div { padding-top: 26px; border-top: 1px solid var(--line); }
+.about-sections h2 { font-size: clamp(1.5rem, 2.6vw, 2.4rem); }
+.about-sections p { max-width: 52ch; }
+.home-trainers { max-width: none; }
+.trainer-image { aspect-ratio: 1.55; }
+.trainer-image img[src$="/trainer-swimming.webp"],
+.trainer-detail .detail-image[src$="/trainer-swimming.webp"] { object-position: center 5%; }
+.trainer-info { border-bottom: 1px solid var(--line); padding-bottom: 16px; }
+.trainer-card:hover .round-arrow { border-color: var(--accent); color: var(--accent); }
+
+@media (min-width: 900px) {
+    .trainer-grid:has(> :nth-child(3)) { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: none; }
+}
+
+.booking-band { background: var(--dark); color: var(--bg); }
+.booking-preview { margin: 0 auto; padding: 66px 0; background: transparent; grid-template-columns: 1fr 1.05fr; }
+.booking-preview h2 { font-size: clamp(3rem, 6.8vw, 6rem); line-height: .92; }
+.booking-preview p { max-width: 39ch; color: #ddd2c7; }
+.booking-preview :focus-visible, .club-slide :focus-visible { outline-color: #ff926e; }
+.quick-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.quick-form select, .quick-form input:not([type=checkbox]):not([type=radio]) { margin-bottom: 4px; }
+.quick-form button, .quick-form > .text-link { grid-column: 1 / -1; }
+.quick-form .text-link:hover { color: #ff926e; }
+.quick-form button:disabled { cursor: not-allowed; }
+#quick-booking, #booking-confirm { scroll-margin-top: 20px; }
+.review-feature {
+    max-width: none;
+    margin: 0;
+    background: var(--soft);
+    border-left: 3px solid var(--signal);
+    padding: clamp(20px, 4vw, 55px) clamp(18px, 4vw, 55px) clamp(20px, 4vw, 55px) clamp(54px, 8vw, 110px);
+}
+.review-feature .quote-mark { left: clamp(14px, 2.7vw, 37px); top: 12px; }
+.review-feature blockquote { max-width: 60ch; margin: 10px 0 15px; }
+.review-feature figcaption { color: var(--muted); font-size: .89rem; }
+.home-contact { border-top: 1px solid var(--line); }
+.contact-preview { display: grid; grid-template-columns: 1fr 1.7fr; gap: 28px; }
+.club-contact { background: var(--soft); margin: 0; padding: 24px; align-self: start; }
+.club-contact dt { color: var(--muted); font-size: .79rem; }
+.club-contact dd { margin: 3px 0 14px; font-weight: 600; overflow-wrap: anywhere; }
+.club-contact dd:last-child { margin-bottom: 0; }
+.contact-grid .club-contact { display: block; padding: 20px; margin: 0 0 20px; }
+.club-map iframe { display: block; border: 0; width: 100%; height: 300px; background: var(--soft); border-radius: 3px; }
+.club-map p { font-size: .78rem; margin: 8px 0 0; }
+.footer-contact > a { display: block; width: fit-content; margin-bottom: 8px; }
+.catalog-image-preview { display: block; width: min(100%, 300px); aspect-ratio: 3 / 2; object-fit: cover; border-radius: 8px; margin-bottom: 12px; }
+.site-footer a:hover { color: var(--accent); }
+
+.login-shell .form-panel h2 { margin-bottom: 16px; }
+.login-shell .form-note { margin: 18px 0 0; }
+
+@media (min-width: 641px) {
+    .login-shell { row-gap: 0; }
+    .login-shell .auth-aside { display: contents; }
+    .login-shell .auth-aside .eyebrow {
+        grid-area: 1 / 1;
+        display: flex;
+        align-items: center;
+        min-height: 1.9rem;
+        margin-top: 32px;
+    }
+    .login-intro {
+        grid-area: 2 / 1;
+        align-self: stretch;
+        display: flex;
+        flex-direction: column;
+    }
+    .login-intro h1 { font-size: clamp(2.45rem, 5vw, 3.6rem); }
+    .login-intro img { margin-top: auto; }
+    .login-shell .form-panel { grid-area: 2 / 2; align-self: stretch; }
+}
+
+@media (max-width: 1060px) {
+    .desktop-nav { display: none; }
+    .account-link { margin-left: auto; }
+    .mobile-menu { display: block; position: relative; }
+    .mobile-menu nav {
+        position: absolute;
+        right: 0;
+        background: var(--bg);
+        padding: 15px 20px;
+        box-shadow: 0 10px 30px #1f1c1921;
+        min-width: 220px;
+        display: grid;
+        gap: 7px;
+        border-radius: 3px;
+    }
+}
+
+@media (max-width: 950px) {
+    .slide-inner { min-height: 510px; }
+    .club-slide-photo { object-position: 68% 40%; }
+    .strength-slide { object-position: 72% 9%; }
+    .booking-preview { padding-block: 52px; }
+}
+
+@media (max-width: 640px) {
+    .header-inner { height: 64px; gap: 9px; }
+    .brand { font-size: 1.4rem; gap: 7px; }
+    .brand-mark { width: 33px; height: 33px; }
+    .brand-caption { font-size: .53rem; }
+    .account-link { font-size: .73rem; padding: 0 7px; gap: 4px; }
+    .account-link svg { width: 15px; }
+    .slide-inner { min-height: clamp(450px, 122vw, 530px); padding: 35px 0; }
+    .slide-copy h1 { font-size: clamp(2.55rem, 11vw, 4rem); margin-bottom: 13px; }
+    .slide-copy p { font-size: .91rem; margin-bottom: 18px; }
+    .club-slide-photo { object-position: 82% center; }
+    .strength-slide { object-position: 90% center; }
+    .slide-track { width: 116px; right: -31px; bottom: -15px; opacity: .5; }
+    .home-services .service-grid, .booking-preview, .contact-preview, .about-sections { grid-template-columns: 1fr; }
+    .home-services .service-image { height: auto; }
+    .trainer-image { aspect-ratio: .88; }
+    .trainer-info h3 { font-size: 1rem; }
+    .booking-preview { padding-block: 42px; }
+    .quick-form { gap: 10px; }
+    .quick-form select, .quick-form input:not([type=checkbox]):not([type=radio]) { padding-inline: 7px; font-size: .81rem; }
+    .about-sections { gap: 24px; margin-top: 40px; }
+}
+
+@media (max-width: 360px) {
+    .account-link { width: 42px; justify-content: center; }
+    .account-link span { display: none; }
+    .account-link svg { width: 18px; }
+}

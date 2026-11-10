@@ -1,0 +1,5 @@
+@page "/Error"
+@using System.Diagnostics
+<PageTitle>Не удалось загрузить страницу · Пульс</PageTitle>
+<section class="container section page-top"><h1>НУЖНА КОРОТКАЯ ПАУЗА</h1><p class="page-lead">Не удалось выполнить действие. Обнови страницу или попробуй немного позже.</p><a class="button" href="/">Вернуться на главную ↗</a>@if (!string.IsNullOrEmpty(requestId)) { <p class="small mt-3">Код обращения: @requestId</p> }</section>
+@code { [CascadingParameter] private HttpContext? HttpContext { get; set; } private string? requestId; protected override void OnInitialized() => requestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier; }

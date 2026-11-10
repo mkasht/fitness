@@ -1,0 +1,112 @@
+@inherits LayoutComponentBase
+@inject IConfiguration Configuration
+@inject SiteContentService SiteService
+
+<a class="skip-link" href="#main">Перейти к содержимому</a>
+<header class="site-header @(FigmaTheme ? "figma-header" : null)">
+    <div class="container header-inner">
+        @if (FigmaTheme)
+        {
+            <ClubBrand Figma="true" />
+        }
+        else
+        {
+            <ClubBrand />
+        }
+        <nav class="desktop-nav" aria-label="Главная навигация"><SiteLinks /></nav>
+        @if (FigmaTheme)
+        {
+            <div class="figma-header-actions">
+                @if (Site["Club:Phone"] is { Length: > 0 } phone)
+                {
+                    <a href="tel:@phone">@phone</a>
+                }
+                else
+                {
+                    <a href="/cabinet">Личный кабинет</a>
+                }
+                <a href="/contacts" class="figma-header-cta">Купить карту</a>
+            </div>
+        }
+        else
+        {
+            <a class="account-link" href="/cabinet" aria-label="Личный кабинет">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="3.5" /><path d="M5 20v-1a7 7 0 0 1 14 0v1" /></svg>
+                <span>Личный кабинет</span>
+            </a>
+        }
+        <details class="mobile-menu" open="@mobileMenuOpen">
+            <summary @onclick="ToggleMenu" @onclick:preventDefault>
+                @if (FigmaTheme)
+                {
+                    <img src="/images/figma/menu.svg" alt="" />
+                }
+                else
+                {
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 8h16M4 16h16" /></svg>
+                }
+                <span class="visually-hidden">Меню</span>
+            </summary>
+            <nav aria-label="Мобильная навигация" @onclick="CloseMenu">
+                <SiteLinks />
+                @if (FigmaTheme)
+                {
+                    <a href="/cabinet">Личный кабинет</a>
+                }
+            </nav>
+        </details>
+    </div>
+</header>
+<main id="main" class="@(FigmaTheme ? "figma-main" : null)"><CascadingValue Value="Site">@Body</CascadingValue></main>
+<footer class="site-footer @(FigmaTheme ? "figma-footer" : null)">
+    <div class="container footer-top">
+        <div>
+            <ClubBrand Figma="FigmaTheme" />
+            <p>Фитнес-клуб · @Site["Club:City"]</p>
+        </div>
+        <nav aria-label="Навигация в подвале">
+            <SiteLinks />
+            <a href="/cabinet">Личный кабинет</a>
+            <a href="/team">Команда проекта</a>
+        </nav>
+        <div class="footer-contact">
+            <a href="/contacts">Связаться с клубом <span aria-hidden="true">↗</span></a>
+            <p>@(Site["Club:Hours"])</p>
+            @foreach (var (setting, label) in SocialLinks)
+            {
+                @if (Site.HttpsLink(setting) is { } url)
+                {
+                    <a href="@url">@label <span aria-hidden="true">↗</span></a>
+                }
+            }
+            <AuthorizeView Roles="@Roles.Staff">
+                <Authorized><a href="/staff">Панель управления <span aria-hidden="true">↗</span></a></Authorized>
+            </AuthorizeView>
+        </div>
+    </div>
+    <div class="container footer-bottom">
+        <span>© @DateTime.Now.Year Пульс</span>
+        <span>@Site["Footer:Note"]</span>
+        <span>Разработка · <a href="/team">распределение задач</a></span>
+    </div>
+</footer>
+<div id="blazor-error-ui" role="alert">
+    Соединение с приложением прервалось. <a href="" class="reload">Обновить страницу</a><button class="dismiss" aria-label="Закрыть">×</button>
+</div>
+
+@code {
+    private SiteContent? site;
+    private SiteContent Site => site ??= SiteService.Defaults;
+    protected override async Task OnParametersSetAsync() => site = await SiteService.ReadAsync();
+
+    private bool FigmaTheme => Configuration["Design:Variant"] == "Palette";
+    private bool mobileMenuOpen;
+    private void ToggleMenu() => mobileMenuOpen = !mobileMenuOpen;
+    private void CloseMenu() => mobileMenuOpen = false;
+
+    private static readonly (string Setting, string Label)[] SocialLinks =
+    [
+        ("Club:VkUrl", "ВКонтакте"), ("Club:TelegramUrl", "Telegram"),
+        ("Club:WhatsAppUrl", "WhatsApp"), ("Club:InstagramUrl", "Instagram")
+    ];
+}

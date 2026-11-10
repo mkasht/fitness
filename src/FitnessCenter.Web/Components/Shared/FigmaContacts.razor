@@ -1,0 +1,71 @@
+
+<section id="figma-contacts" class="figma-section figma-contacts" aria-label="Контакты фитнес-центра">
+    <div class="figma-contact-copy">
+        <div>
+            <h2>Пульс.Club</h2>
+            <p class="figma-contact-subtitle">Фитнес-центр</p>
+            <address>
+                @Site["Club:Address"]
+                @if (Site["Club:TransitNote"] is { Length: > 0 } transit)
+                {
+                    <span>—</span><br />@transit
+                }
+            </address>
+            <div class="figma-contact-actions">
+                @if (Site["Club:Phone"] is { Length: > 0 } phone)
+                {
+                    <a class="figma-contact-link" href="tel:@phone"><span><img src="/images/figma/phone.svg" alt="" /></span>@phone</a>
+                }
+                else if (Site["Club:DemoPhone"] is { Length: > 0 } demoPhone)
+                {
+                    <div class="figma-contact-link"><span><img src="/images/figma/phone.svg" alt="" /></span>@demoPhone</div>
+                    <small class="figma-contact-hours">Демонстрационный номер</small>
+                }
+                <a class="figma-contact-link" href="@ContactHref"><span><img src="/images/figma/mail.svg" alt="" /></span>@ContactLabel</a>
+            </div>
+            <p class="figma-contact-hours">@Site["Club:Hours"]</p>
+        </div>
+        <div class="figma-contact-socials" role="group" aria-label="Социальные сети">
+            @foreach (var (name, setting, image) in Socials)
+            {
+                @if (GetHttpsLink(setting) is { } link)
+                {
+                    <a href="@link" aria-label="@name"><img src="@image" alt="" /></a>
+                }
+                else
+                {
+                    <span role="img" aria-label="@name"><img src="@image" alt="" /></span>
+                }
+            }
+        </div>
+    </div>
+    @if (GetHttpsLink("Club:DirectionsUrl") is { } map)
+    {
+        <a class="figma-map" href="@map" aria-label="Открыть адрес клуба на Яндекс Картах">
+            <img class="figma-map-picture" src="/images/figma/contacts-map.webp" alt="" loading="lazy" />
+            <span class="figma-map-pin"><img src="/images/figma/map-pin.svg" alt="" /><img src="/images/figma/map-logo.svg" alt="" /></span>
+        </a>
+    }
+    else
+    {
+        <ClubMap />
+    }
+</section>
+
+@code {
+    [CascadingParameter] private SiteContent Site { get; set; } = null!;
+    private string ContactLabel => Site["Club:Email"] is { Length: > 0 } email ? email :
+        Site["Club:ContactLabel"] is { Length: > 0 } label ? label : "Связаться с клубом";
+    private string ContactHref => Site["Club:Email"] is { Length: > 0 } email ? $"mailto:{email}" : "/contacts";
+
+    private static readonly (string Name, string Setting, string Image)[] Socials =
+    [
+        ("Telegram", "Club:TelegramUrl", "/images/figma/contact-telegram.svg"),
+        ("WhatsApp", "Club:WhatsAppUrl", "/images/figma/contact-whatsapp.svg"),
+        ("Instagram", "Club:InstagramUrl", "/images/figma/contact-instagram.svg")
+    ];
+
+    private string? GetHttpsLink(string setting) =>
+        Uri.TryCreate(Site[setting], UriKind.Absolute, out var url) && url.Scheme == Uri.UriSchemeHttps
+            ? url.AbsoluteUri : null;
+}

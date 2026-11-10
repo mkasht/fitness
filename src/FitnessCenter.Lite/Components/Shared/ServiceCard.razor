@@ -1,0 +1,12 @@
+<article class="service-card" id="@($"service-{Service.Id}")">
+    <div class="service-image"><img src="@Service.Image" alt="@Service.Name" loading="lazy" /></div>
+    <div class="service-card-body"><span class="category">@Service.Category · @Service.DurationMinutes мин</span><h3>@Service.Name</h3><p>@Service.Summary</p><span class="price">от @Service.Price.ToString("N0") ₽</span>
+    @if (Preview) { <p class="service-more"><a class="text-link" href="@($"/services#service-{Service.Id}")">Подробнее об услуге ↗</a></p> }
+    else { <details class="service-details"><summary>Подробнее</summary><p>@Service.Description</p></details> }
+    </div>
+</article>
+@code {
+    [Parameter, EditorRequired] public ClubService Service { get; set; } = null!;
+    [Parameter] public bool Preview { get; set; }
+}
+

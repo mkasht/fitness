@@ -1,0 +1,32 @@
+@page "/team"
+
+<PageTitle>Команда проекта · Пульс</PageTitle>
+<section class="container section page-top">
+    <span class="eyebrow">Учебный проект</span>
+    <h1>@Site["Team:Title"]</h1>
+    <p class="page-lead">@Site["Team:Lead"]</p>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Участник</th><th>Ответственность</th></tr></thead>
+            <tbody>
+                @foreach (var person in Contributors)
+                {
+                    @if (Site[$"Team:{person}"] is { Length: > 0 } name)
+                    {
+                        <tr><td>@name</td><td>@Site[$"Team:{person}Work"]</td></tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="content-prose">
+        <h2>Технологии</h2>
+        <p>@Site["Team:Tools"]</p>
+        <p>@Site["Team:Note"]</p>
+    </div>
+</section>
+
+@code {
+    [CascadingParameter] private SiteContent Site { get; set; } = null!;
+    private static readonly string[] Contributors = ["Author", "Developer", "Design"];
+}

@@ -1,0 +1,156 @@
+@page "/"
+@inject CatalogService Catalog
+@inject IConfiguration Configuration
+
+<PageTitle>Пульс · Фитнес-клуб · @Site["Club:City"]</PageTitle>
+
+@if (Configuration["Design:Variant"] == "Palette")
+{
+    <FigmaHome Services="services" Trainers="trainers" Reviews="reviews" ReviewSummary="reviewSummary" />
+}
+else
+{
+<ClubSlider />
+
+<section class="container section home-services">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">01 / Услуги</span>
+            <h2>Найди своё движение.</h2>
+        </div>
+        <a class="text-link" href="/services">Все услуги <span aria-hidden="true">↗</span></a>
+    </div>
+    @if (services is null)
+    {
+        <p role="status">Загружаем услуги…</p>
+    }
+    else if (services.Count == 0)
+    {
+        <p>Услуги скоро появятся в каталоге.</p>
+    }
+    else
+    {
+        <div class="service-grid">
+            @foreach (var service in services)
+            {
+                <ServiceCard Service="service" />
+            }
+        </div>
+    }
+</section>
+
+<div class="home-about">
+    <section class="container section about-preview">
+        <img src="/images/club.jpg" alt="Тренажёрный зал клуба Пульс" loading="lazy" />
+        <div>
+            <span class="eyebrow">02 / О фитнес-центре</span>
+            <h2>Место для твоего движения.</h2>
+            <p>@Site["About:HomeLead"]</p>
+            <p>@Site["About:HomeTeam"]</p>
+            <a class="text-link" href="/about">Подробнее о клубе <span aria-hidden="true">↗</span></a>
+        </div>
+    </section>
+</div>
+
+<section class="container section">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">03 / Тренеры</span>
+            <h2>Твоя команда.</h2>
+        </div>
+        <a class="text-link" href="/trainers">Все тренеры <span aria-hidden="true">↗</span></a>
+    </div>
+    @if (trainers is null)
+    {
+        <p role="status">Загружаем тренеров…</p>
+    }
+    else if (trainers.Count == 0)
+    {
+        <p>Профили тренеров скоро появятся.</p>
+    }
+    else
+    {
+        <div class="trainer-grid home-trainers">
+            @foreach (var trainer in trainers.Take(3))
+            {
+                <TrainerCard Trainer="trainer" />
+            }
+        </div>
+    }
+</section>
+
+<div class="booking-band">
+    <section class="section container booking-preview" id="quick-booking">
+        <div>
+            <span class="eyebrow">04 / Запись на тренировку</span>
+            <h2>Время<br />двигаться.</h2>
+            <p>Выбери день, тренера и свободное время. На следующем шаге можно оставить комментарий и подтвердить запись.</p>
+        </div>
+        <QuickBooking />
+    </section>
+</div>
+
+<section class="section container">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">05 / Отзывы</span>
+            <h2>После тренировки.</h2>
+        </div>
+        <a class="text-link" href="/reviews">Все отзывы <span aria-hidden="true">↗</span></a>
+    </div>
+    @if (reviews is null)
+    {
+        <p role="status">Загружаем отзывы…</p>
+    }
+    else if (reviews.FirstOrDefault() is { } review)
+    {
+        <figure class="review-feature">
+            <span class="quote-mark" aria-hidden="true">“</span>
+            <div class="rating" aria-label="Оценка @review.Rating из 5"><span aria-hidden="true">@(new string('★', review.Rating))</span></div>
+            <blockquote>@review.Text</blockquote>
+            <figcaption>@review.Booking.User.FullName · @review.Booking.Session.Service.Name</figcaption>
+        </figure>
+    }
+    else
+    {
+        <p>Пока отзывов нет. Поделиться впечатлениями можно после посещения клуба.</p>
+    }
+</section>
+
+<section class="section container home-contact">
+    <div class="section-heading">
+        <div>
+            <span class="eyebrow">06 / Контакты</span>
+            <h2>До встречи в клубе.</h2>
+        </div>
+        <a class="text-link" href="/contacts">Связаться с клубом <span aria-hidden="true">↗</span></a>
+    </div>
+    <div class="contact-preview">
+        <ClubContact />
+        <ClubMap />
+    </div>
+</section>
+}
+
+@code {
+    [CascadingParameter] private SiteContent Site { get; set; } = null!;
+    private List<FitnessService>? services;
+    private List<Trainer>? trainers;
+    private List<Review>? reviews;
+    private (int Count, double AverageRating) reviewSummary;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var catalog = await Catalog.ServicesAsync();
+        services = catalog
+            .GroupBy(service => service.Category)
+            .Select(group => group.First())
+            .OrderBy(service => service.Category switch { "Сила" => 0, "Восстановление" => 1, "Баланс" => 2, _ => 3 })
+            .Take(3)
+            .ToList();
+        trainers = await Catalog.TrainersAsync();
+        if (Configuration["Design:Variant"] == "Palette")
+            reviewSummary = await Catalog.ReviewSummaryAsync();
+        reviews = await Catalog.FeaturedReviewsAsync();
+    }
+}

@@ -1,0 +1,36 @@
+@page "/trainers"
+@inject CatalogService Catalog
+@inject IConfiguration Configuration
+
+<PageTitle>Тренеры · Пульс</PageTitle>
+<section class="container section page-top @(Figma ? "figma-team figma-trainers-page" : null)">
+    <span class="eyebrow">@(Figma ? "Тренерский состав" : "Твоя команда")</span>
+    <h1>@(Figma ? "НАША КОМАНДА" : "РЯДОМ С ТОБОЙ")</h1>
+    <p class="page-lead">Познакомься с тренерами и найди того, с кем комфортно идти к своей цели.</p>
+    @if (trainers is null)
+    {
+        <p role="status">Загружаем тренеров…</p>
+    }
+    else if (trainers.Count == 0)
+    {
+        <p>Профили тренеров скоро появятся.</p>
+    }
+    else
+    {
+        <div class="@TrainerLayout">
+            @foreach (var trainer in trainers)
+            {
+                <TrainerCard Trainer="trainer" RoundPortrait="Figma" />
+            }
+        </div>
+    }
+</section>
+
+@code {
+    private List<Trainer>? trainers;
+    private bool Figma => Configuration["Design:Variant"] == "Palette";
+    private string TrainerLayout => !Figma ? "trainer-grid" :
+        trainers?.Count <= 6 ? "figma-team-row" : "figma-trainers-grid";
+
+    protected override async Task OnInitializedAsync() => trainers = await Catalog.TrainersAsync();
+}

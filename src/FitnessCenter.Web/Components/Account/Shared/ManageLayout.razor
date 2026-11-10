@@ -1,0 +1,16 @@
+﻿@inherits LayoutComponentBase
+@layout FitnessCenter.Web.Components.Layout.MainLayout
+
+<section class="identity-settings">
+    <h1>Manage your account</h1>
+    <h2>Change your account settings</h2>
+    <hr />
+    <div class="row identity-settings-grid">
+        <div class="col-lg-3">
+            <ManageNavMenu />
+        </div>
+        <div class="col-lg-9">
+            @Body
+        </div>
+    </div>
+</section>

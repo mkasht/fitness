@@ -1,0 +1,59 @@
+@page "/contacts"
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<ApplicationDbContext> Factory
+
+<PageTitle>Контакты · Пульс</PageTitle>
+
+<section class="container section page-top">
+    <span class="eyebrow">Контакты</span>
+    <h1>До встречи в клубе.</h1>
+    <div class="contact-grid">
+        <div>
+            <p class="page-lead">Поможем выбрать направление и ответим на вопросы о тренировках.</p>
+            <ClubContact />
+            <ClubMap />
+        </div>
+        <div class="form-panel">
+            <h2>Напиши нам</h2>
+            @if (sent)
+            {
+                <div class="notice" role="status">Сообщение сохранено. Менеджер увидит его в панели управления.</div>
+            }
+            <EditForm Model="message" FormName="feedback" OnValidSubmit="Send">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <label for="contact-name">Имя</label>
+                <InputText id="contact-name" @bind-Value="message.Name" autocomplete="name" />
+                <label for="contact-email">Email для ответа</label>
+                <InputText id="contact-email" @bind-Value="message.Email" type="email" autocomplete="email" />
+                <label for="contact-text">Твой вопрос</label>
+                <InputTextArea id="contact-text" @bind-Value="message.Text" />
+                <button class="button" type="submit" disabled="@busy">@(busy ? "Сохраняем…" : "Отправить сообщение ↗")</button>
+            </EditForm>
+        </div>
+    </div>
+</section>
+
+@code {
+    private FeedbackMessage message = new();
+    private bool sent;
+    private bool busy;
+
+    private async Task Send()
+    {
+        if (busy) return;
+        busy = true;
+        try
+        {
+            await using var db = await Factory.CreateDbContextAsync();
+            db.Feedback.Add(message);
+            await db.SaveChangesAsync();
+            message = new();
+            sent = true;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+}

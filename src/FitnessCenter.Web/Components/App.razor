@@ -1,0 +1,45 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Пульс: фитнес, плавание, йога и персональные тренировки. Выберите направление и запишитесь на удобное время." />
+    <base href="/" />
+    <ResourcePreloader />
+    <link rel="stylesheet" href="@Assets["app.css"]" />
+    <link rel="stylesheet" href="@Assets["club.css"]" />
+    <link rel="stylesheet" href="@Assets["FitnessCenter.Web.styles.css"]" />
+    @if (Configuration["Design:Variant"] == "Palette")
+    {
+        <link rel="stylesheet" href="@Assets["palette.css"]" />
+        <link rel="stylesheet" href="@Assets["figma-home.css"]" />
+        <link rel="stylesheet" href="@Assets["figma-pages.css"]" />
+    }
+    <ImportMap />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <HeadOutlet @rendermode="PageRenderMode" />
+</head>
+
+<body>
+    <Routes @rendermode="PageRenderMode" />
+    <ReconnectModal />
+    <script src="@Assets["_framework/blazor.web.js"]"></script>
+    <script src="@Assets["Components/Account/Shared/PasskeySubmit.razor.js"]" type="module"></script>
+    @if (Configuration["Design:Variant"] == "Palette")
+    {
+        <script src="@Assets["Components/Shared/FigmaReviews.razor.js"]" type="module"></script>
+    }
+</body>
+
+</html>
+
+@inject IConfiguration Configuration
+
+@code {
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    private IComponentRenderMode? PageRenderMode =>
+        HttpContext.AcceptsInteractiveRouting() ? InteractiveServer : null;
+}

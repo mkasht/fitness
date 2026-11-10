@@ -1,0 +1,173 @@
+@page "/admin/catalog"
+@attribute [Authorize(Roles = Roles.Admin)]
+@inject CatalogAdminService Admin
+@inject AuthenticationStateProvider Authentication
+<PageTitle>Каталог · Панель управления</PageTitle>
+<section class="container section page-top"><a class="breadcrumb" href="/staff">← Панель управления</a><h1>КАТАЛОГ КЛУБА</h1><AdminLinks />
+<div class="staff-tabs"><button class="@(!trainerTab ? "selected" : "")" @onclick="() => ChangeTab(false)">Услуги</button><button class="@(trainerTab ? "selected" : "")" @onclick="() => ChangeTab(true)">Тренеры</button></div>
+@if (result is not null) { <div class="notice @(result.Success ? "" : "error")" role="status">@result.Message</div> }
+@if (deletion is { } item)
+{
+    <div class="notice error" role="group" aria-label="Подтверждение удаления">
+        <p>Удалить «@item.Name»? Если у записи есть занятия, она будет скрыта с сайта, будущие занятия отменятся, а история сохранится.</p>
+        <div class="row-actions">
+            <button class="button button-small" type="button" disabled="@busy" @onclick="DeleteConfirmed">Подтвердить удаление</button>
+            <button class="link-button" type="button" disabled="@busy" @onclick="() => deletion = null">Оставить</button>
+        </div>
+    </div>
+}
+@if (trainerTab) {
+<div class="row-actions"><button class="button button-small" @onclick="NewTrainer">Добавить тренера</button></div>
+<div class="table-wrap"><table><thead><tr><th>Тренер</th><th>Направление</th><th>Статус</th><th></th></tr></thead><tbody>@foreach (var t in trainers) { <tr><td>@t.Name</td><td>@t.Specialty</td><td>@(t.IsActive ? "Активен" : "Скрыт")</td><td><button class="link-button" @onclick="() => EditTrainer(t)">Изменить</button> <button class="link-button" type="button" disabled="@busy" @onclick="() => PrepareDelete(t.Id, t.Name, true)">Удалить</button></td></tr> }</tbody></table></div>
+@if (trainer is not null) { <div class="form-panel staff-form"><h2>@(trainer.Id == 0 ? "Новый тренер" : trainer.Name)</h2><EditForm Model="trainer" OnValidSubmit="SaveTrainer" FormName="trainer-edit"><DataAnnotationsValidator /><ValidationSummary />
+<label for="trainer-name">Имя</label><InputText id="trainer-name" @bind-Value="trainer.Name" /><label for="trainer-specialty">Специализация</label><InputText id="trainer-specialty" @bind-Value="trainer.Specialty" /><label for="trainer-bio">Биография</label><InputTextArea id="trainer-bio" @bind-Value="trainer.Biography" /><label for="trainer-exp">Опыт в годах</label><InputNumber id="trainer-exp" @bind-Value="trainer.ExperienceYears" />
+<label for="trainer-image">Изображение</label>
+<InputSelect id="trainer-image" @bind-Value="trainer.Image">
+    <option value="/images/figma/team-vitalik.webp">Виталик</option>
+    <option value="/images/figma/team-olga-personal.webp">Ольга · Персональный тренер</option>
+    <option value="/images/figma/team-valery.webp">Валерий</option>
+    <option value="/images/figma/team-alexandra.webp">Александра</option>
+    <option value="/images/figma/team-yuri.webp">Юрий</option>
+    <option value="/images/figma/team-olga-mind-body.webp">Ольга · Тренер йоги и пилатеса</option>
+    <option value="/images/trainer-male.jpg">Тренер, мужской портрет</option>
+    <option value="/images/trainer-female.jpg">Тренер, женский портрет</option>
+    <option value="/images/trainer-swimming.webp">Тренер по плаванию</option>
+</InputSelect>
+<p class="small">Проводит занятия</p>@foreach (var s in services) { <label class="check-label"><input type="checkbox" checked="@selectedServices.Contains(s.Id)" @onchange="e => SetService(s.Id, (bool)(e.Value ?? false))" />@s.Name</label> }
+<label class="check-label"><InputCheckbox @bind-Value="trainer.IsActive" />Показывать на сайте</label><button class="button" disabled="@busy" type="submit">Сохранить профиль</button></EditForm></div> }
+} else {
+<div class="row-actions"><button class="button button-small" @onclick="NewService">Добавить услугу</button></div>
+<div class="table-wrap"><table><thead><tr><th>Услуга</th><th>Цена</th><th>Статус</th><th></th></tr></thead><tbody>@foreach (var s in services) { <tr><td>@s.Name</td><td>@s.Price.ToString("N0") ₽</td><td>@(s.IsActive ? "Активна" : "Скрыта")</td><td><button class="link-button" @onclick="() => EditService(s)">Изменить</button> <button class="link-button" type="button" disabled="@busy" @onclick="() => PrepareDelete(s.Id, s.Name, false)">Удалить</button></td></tr> }</tbody></table></div>
+@if (service is not null) { <div class="form-panel staff-form"><h2>@(service.Id == 0 ? "Новая услуга" : service.Name)</h2><EditForm @key="service" Model="service" OnValidSubmit="SaveService" FormName="service-edit"><DataAnnotationsValidator /><ValidationSummary />
+<label for="service-name">Название</label><InputText id="service-name" @bind-Value="service.Name" /><label for="service-category">Категория</label><InputText id="service-category" @bind-Value="service.Category" /><label for="service-summary">Краткое описание</label><InputTextArea id="service-summary" @bind-Value="service.Summary" /><label for="service-description">Полное описание</label><InputTextArea id="service-description" @bind-Value="service.Description" /><label for="service-duration">Длительность, минут</label><InputNumber id="service-duration" @bind-Value="service.DurationMinutes" /><label for="service-price">Стоимость, ₽</label><InputNumber id="service-price" @bind-Value="service.Price" /><label for="service-image">Изображение</label><InputSelect id="service-image" @bind-Value="service.Image" disabled="@(busy || pendingImage is not null)">
+@if (!ServicePresets.Any(preset => preset.Path == service.Image))
+{
+    <option value="@service.Image">Текущее изображение</option>
+}
+@foreach (var (path, label) in ServicePresets)
+{
+    <option value="@path">@label</option>
+}
+</InputSelect>
+<label for="service-image-file">Загрузить изображение с компьютера</label>
+<InputFile @key="uploadVersion" id="service-image-file" OnChange="SelectImage" accept="image/jpeg,image/png,image/webp" disabled="@busy" aria-describedby="service-image-note" />
+<p id="service-image-note" class="small">JPG, PNG или WebP до 5 МБ. Картинка обновится после сохранения услуги.</p>
+@if (uploadError is not null)
+{
+    <p class="validation-message" role="alert">@uploadError</p>
+}
+<img class="catalog-image-preview" src="@(imagePreview ?? service.Image)" alt="Предпросмотр изображения услуги" />
+@if (pendingImage is not null || uploadError is not null)
+{
+    <button class="link-button" type="button" disabled="@busy" @onclick="ClearImageUpload">Отменить загрузку</button>
+}
+<label class="check-label"><InputCheckbox @bind-Value="service.IsActive" />Показывать на сайте</label><button class="button" disabled="@(busy || uploadError is not null)" type="submit">Сохранить услугу</button></EditForm></div> }
+}</section>
+@code {
+    private (int Id, string Name, bool Trainer)? deletion;
+
+    private void PrepareDelete(int id, string name, bool isTrainer)
+    {
+        deletion = (id, name, isTrainer);
+        result = null;
+    }
+
+    private async Task DeleteConfirmed()
+    {
+        if (busy || deletion is not { } item) return;
+        busy = true;
+        try
+        {
+            result = item.Trainer
+                ? await Admin.DeleteTrainerAsync(user, item.Id)
+                : await Admin.DeleteServiceAsync(user, item.Id);
+            if (!result.Success) return;
+            deletion = null;
+            service = null;
+            trainer = null;
+            ClearImageUpload();
+            await Load();
+        }
+        finally { busy = false; }
+    }
+
+    private static readonly (string Path, string Label)[] ServicePresets =
+    [
+        ("/images/club.jpg", "Тренажёрный зал"),
+        ("/images/pool.jpg", "Бассейн"),
+        ("/images/service-functional.webp", "Функциональный тренинг"),
+        ("/images/service-yoga.webp", "Йога"),
+        ("/images/pulse-studio.webp", "Пилатес"),
+        ("/images/service-personal.webp", "Персональная тренировка"),
+        ("/images/trainer-female.jpg", "Женский портрет"),
+        ("/images/trainer-male.jpg", "Мужской портрет")
+    ];
+    private const string ImageFormatError = "Выберите изображение JPG, PNG или WebP до 5 МБ.";
+    private byte[]? pendingImage;
+    private string? imagePreview;
+    private string? uploadError;
+    private int uploadVersion;
+
+    private void EditService(FitnessService value)
+    {
+        if (busy) return;
+        service = value;
+        deletion = null;
+        result = null;
+        ClearImageUpload();
+    }
+
+    private async Task SelectImage(InputFileChangeEventArgs args)
+    {
+        if (busy || service is null) return;
+        pendingImage = null;
+        imagePreview = null;
+        uploadError = null;
+        busy = true;
+        try
+        {
+            if (args.File.Size > CatalogImage.MaxBytes)
+            {
+                uploadError = ImageFormatError;
+                return;
+            }
+            await using var stream = args.File.OpenReadStream(CatalogImage.MaxBytes);
+            using var buffer = new MemoryStream();
+            await stream.CopyToAsync(buffer);
+            var bytes = buffer.ToArray();
+            var contentType = CatalogImage.DetectContentType(bytes);
+            if (contentType is null)
+            {
+                uploadError = ImageFormatError;
+                return;
+            }
+            pendingImage = bytes;
+            imagePreview = $"data:{contentType};base64,{Convert.ToBase64String(bytes)}";
+        }
+        catch (IOException)
+        {
+            uploadError = "Не удалось прочитать файл. Выберите изображение ещё раз.";
+        }
+        finally { busy = false; }
+    }
+
+    private void ClearImageUpload()
+    {
+        pendingImage = null;
+        imagePreview = null;
+        uploadError = null;
+        uploadVersion++;
+    }
+
+    private ClaimsPrincipal user = new(); private List<FitnessService> services = []; private List<Trainer> trainers = []; private FitnessService? service; private Trainer? trainer; private HashSet<int> selectedServices = []; private bool trainerTab; private bool busy; private OperationResult? result;
+    protected override async Task OnInitializedAsync() { user = (await Authentication.GetAuthenticationStateAsync()).User; await Load(); }
+    private async Task Load() => (services, trainers) = await Admin.LoadAsync(user);
+    private void ChangeTab(bool value) { if (busy) return; trainerTab = value; service = null; trainer = null; result = null; deletion = null; ClearImageUpload(); }
+    private void NewService() => EditService(new());
+    private void NewTrainer() { trainer = new(); selectedServices = []; result = null; }
+    private void EditTrainer(Trainer value) { if (busy) return; deletion = null; trainer = value; selectedServices = value.Services.Select(s => s.Id).ToHashSet(); }
+    private void SetService(int id, bool selected) { if (selected) selectedServices.Add(id); else selectedServices.Remove(id); }
+    private async Task SaveService() { if (busy || service is null || uploadError is not null) return; busy = true; try { result = await Admin.SaveServiceAsync(user, service, pendingImage); if (result.Success) { service = null; ClearImageUpload(); await Load(); } } finally { busy = false; } }
+    private async Task SaveTrainer() { if (busy || trainer is null) return; busy = true; try { result = await Admin.SaveTrainerAsync(user, trainer, selectedServices.ToArray()); if (result.Success) { trainer = null; await Load(); } } finally { busy = false; } }
+}
+

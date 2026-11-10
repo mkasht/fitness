@@ -1,0 +1,102 @@
+<div class="figma-home">
+    <FigmaSlider />
+
+    <section class="figma-section figma-services" aria-labelledby="figma-services-title">
+        <h2 id="figma-services-title">@Site["Home:ServicesHeading"] <em>@Site["Home:ServicesAccent"]</em></h2>
+        @if (Services is null)
+        {
+            <p role="status">Загружаем услуги…</p>
+        }
+        else if (Services.Count == 0)
+        {
+            <p>Услуги скоро появятся в каталоге.</p>
+        }
+        else
+        {
+            <div class="service-grid">
+                @foreach (var service in Services)
+                {
+                    <ServiceCard Service="service" Figma="true" />
+                }
+            </div>
+        }
+    </section>
+
+    <section class="figma-section figma-about" aria-labelledby="figma-about-title">
+        <img class="figma-about-photo" src="/images/figma/about-gym.webp" alt="Тренировка в тренажёрном зале" loading="lazy" />
+        <div>
+            <span class="figma-kicker">О фитнес-центре</span>
+            <h2 id="figma-about-title">@Site["Home:AboutHeading"]<br /> @Site["Home:AboutLine2"] <em>@Site["Home:AboutAccent"]</em></h2>
+            <p>@Site["About:HomeLead"]</p>
+            <p>@Site["About:HomeTeam"]</p>
+            <a class="figma-pill" href="/about">Подробнее о фитнес-центре <span><img src="/images/figma/arrow.svg" alt="" /></span></a>
+        </div>
+    </section>
+
+    <section class="figma-section figma-team" aria-labelledby="figma-team-title">
+        <span class="figma-kicker"><img src="/images/figma/team-spark.svg" alt="" /> Тренерский состав</span>
+        <h2 id="figma-team-title">@Site["Home:TrainersHeading"]</h2>
+        @if (Trainers is null)
+        {
+            <p role="status">Загружаем тренеров…</p>
+        }
+        else if (Trainers.Count == 0)
+        {
+            <p>Профили тренеров скоро появятся.</p>
+        }
+        else
+        {
+            <img class="figma-spark figma-spark-left" src="/images/figma/team-spark.svg" alt="" />
+            <img class="figma-spark figma-spark-right" src="/images/figma/team-spark.svg" alt="" />
+            <div class="figma-team-row">
+                @foreach (var trainer in Trainers.Take(6))
+                {
+                    <TrainerCard Trainer="trainer" RoundPortrait />
+                }
+            </div>
+        }
+    </section>
+
+    <section class="figma-section figma-account" aria-labelledby="figma-account-title">
+        <img class="figma-account-curve" src="/images/figma/account-wave.webp" alt="" loading="lazy" />
+        <div class="figma-account-copy">
+            <h2 id="figma-account-title">@Site["Home:AccountTitle"]</h2>
+            <p>@Site["Home:AccountLead"]</p>
+            <a class="figma-pill" href="/cabinet">@Site["Home:AccountAction"] <span><img src="/images/figma/arrow.svg" alt="" /></span></a>
+        </div>
+        <article class="figma-account-card">
+            <img src="/images/figma/account-clock.svg" alt="" />
+            <div><h3>@Site["Home:AccountScheduleTitle"]</h3><p>@Site["Home:AccountScheduleText"]</p></div>
+        </article>
+        <div class="figma-account-phone">
+            <img class="figma-phone-picture" src="/images/figma/account-phone.webp" alt="Макет расписания клуба на телефоне" loading="lazy" />
+            <img class="figma-phone-mask" src="/images/figma/account-curve.svg" alt="" />
+            <img class="figma-phone-logo" src="/images/figma/account-phone-logo.webp" alt="" loading="lazy" />
+        </div>
+        <article class="figma-account-card">
+            <img src="/images/figma/account-gift.svg" alt="" />
+            <div><h3>@Site["Home:AccountHistoryTitle"]</h3><p>@Site["Home:AccountHistoryText"]</p></div>
+        </article>
+    </section>
+
+    <FigmaReviews Reviews="Reviews" Summary="ReviewSummary" />
+
+    <section class="figma-section figma-booking" id="quick-booking" aria-labelledby="figma-booking-title">
+        <div class="figma-booking-panel">
+            <h2 id="figma-booking-title">@Site["Home:BookingHeading"]</h2>
+            <p>@Site["Home:BookingLead"]</p>
+            <QuickBooking />
+        </div>
+    </section>
+
+    <FigmaContacts />
+</div>
+
+@code {
+    [CascadingParameter] private SiteContent Site { get; set; } = null!;
+    [Parameter] public IReadOnlyList<FitnessService>? Services { get; set; }
+    [Parameter] public IReadOnlyList<Trainer>? Trainers { get; set; }
+    [Parameter] public IReadOnlyList<Review>? Reviews { get; set; }
+    [Parameter] public (int Count, double AverageRating) ReviewSummary { get; set; }
+
+}

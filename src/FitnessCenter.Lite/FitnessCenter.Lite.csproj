@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+  </PropertyGroup>
+
+  <!-- Materialize all web assets, including framework JS and generated CSS.
+       A Debug build must not depend on paths from the original computer. -->
+  <Target Name="CopyLocalWebAssetsForRun"
+          BeforeTargets="CopyStaticWebAssetsToOutputDirectory">
+    <ItemGroup>
+      <StaticWebAsset Update="@(StaticWebAsset)"
+                      Condition="'%(StaticWebAsset.AssetKind)' != 'Publish'">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </StaticWebAsset>
+    </ItemGroup>
+  </Target>
+</Project>

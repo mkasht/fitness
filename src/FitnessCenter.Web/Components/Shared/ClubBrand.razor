@@ -1,0 +1,20 @@
+@if (Figma)
+{
+    <a class="figma-logo" href="/" aria-label="Пульс, главная">
+        <img src="/images/figma/logo.svg" alt="" />
+        <span>ПУЛЬС<small>.CLUB</small></span>
+    </a>
+}
+else
+{
+<a class="brand" href="/" aria-label="Пульс, главная">
+    <svg class="brand-mark" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+        <path d="M7 22H14L19 11L24 29L29 18H34" stroke="currentColor" stroke-width="3" stroke-linecap="square" stroke-linejoin="bevel" />
+    </svg>
+    <span>ПУЛЬС<small class="brand-caption">Фитнес-клуб</small></span>
+</a>
+}
+
+@code {
+    [Parameter] public bool Figma { get; set; }
+}

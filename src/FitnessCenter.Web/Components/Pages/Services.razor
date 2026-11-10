@@ -1,0 +1,42 @@
+@page "/services"
+@inject CatalogService Catalog
+@inject IConfiguration Configuration
+
+<PageTitle>Направления · Пульс</PageTitle>
+<section class="container section page-top @(Figma ? "figma-services" : null)">
+    <span class="eyebrow">Найди своё движение</span>
+    <h1>НАПРАВЛЕНИЯ</h1>
+    <p class="page-lead">Силовые тренировки, плавание и спокойные практики. Выбирай по настроению и цели.</p>
+    <div class="filter-tabs" role="group" aria-label="Фильтр по направлению">
+        @foreach (var item in categories)
+        {
+            <button type="button" class="@(category == item ? "selected" : null)" aria-pressed="@(category == item ? "true" : "false")" @onclick="() => category = item">@item</button>
+        }
+    </div>
+    @if (services is null)
+    {
+        <p role="status">Загружаем услуги…</p>
+    }
+    else
+    {
+        <div class="service-grid">
+            @foreach (var service in services.Where(service => category == "Все" || service.Category == category))
+            {
+                <ServiceCard Service="service" Figma="Figma" />
+            }
+        </div>
+    }
+</section>
+
+@code {
+    private List<FitnessService>? services;
+    private string category = "Все";
+    private string[] categories = ["Все"];
+    private bool Figma => Configuration["Design:Variant"] == "Palette";
+
+    protected override async Task OnInitializedAsync()
+    {
+        services = await Catalog.ServicesAsync();
+        categories = ["Все", .. services.Select(service => service.Category).Distinct()];
+    }
+}

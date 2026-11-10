@@ -1,0 +1,14 @@
+@page "/profile"
+@attribute [Authorize]
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<ApplicationDbContext> Factory
+@inject AuthenticationStateProvider Authentication
+<PageTitle>Профиль · Пульс</PageTitle>
+<section class="container section page-top"><a class="breadcrumb" href="/cabinet">← Личный кабинет</a><h1>МОЙ ПРОФИЛЬ</h1><div class="form-panel staff-form">@if (saved) { <div class="notice" role="status">Профиль сохранён.</div> }<EditForm Model="model" OnValidSubmit="Save" FormName="profile"><DataAnnotationsValidator /><ValidationSummary /><label for="profile-name">Имя</label><InputText id="profile-name" @bind-Value="model.Name" autocomplete="name" /><label for="profile-phone">Телефон</label><InputText id="profile-phone" @bind-Value="model.Phone" autocomplete="tel" /><p class="small">Email: @email</p><button class="button" disabled="@busy" type="submit">Сохранить изменения</button></EditForm></div></section>
+@code {
+    private ProfileModel model = new(); private string uid = ""; private string email = ""; private bool saved; private bool busy;
+    protected override async Task OnInitializedAsync() { uid = BookingService.UserId((await Authentication.GetAuthenticationStateAsync()).User); await using var db = await Factory.CreateDbContextAsync(); var user = await db.Users.SingleAsync(x => x.Id == uid); model.Name = user.FullName; model.Phone = user.PhoneNumber ?? ""; email = user.Email ?? ""; }
+    private async Task Save() { if (busy) return; busy = true; try { await using var db = await Factory.CreateDbContextAsync(); var u = await db.Users.SingleAsync(x => x.Id == uid); u.FullName = model.Name.Trim(); u.PhoneNumber = model.Phone.Trim(); await db.SaveChangesAsync(); saved = true; } finally { busy = false; } }
+    private class ProfileModel { [Required(ErrorMessage = "Укажите имя"), StringLength(100)] public string Name { get; set; } = ""; [StringLength(30), RegularExpression(@"[+0-9()\s-]{7,30}", ErrorMessage = "Проверьте номер телефона")] public string Phone { get; set; } = ""; }
+}

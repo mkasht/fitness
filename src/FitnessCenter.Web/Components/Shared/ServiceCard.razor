@@ -1,0 +1,12 @@
+<a class="service-card" href="@($"/services/{Service.Id}")"><div class="service-image"><img src="@Image" alt="@Service.Name" loading="lazy" /></div><div class="service-card-body"><span class="category">@Service.Category · @Service.DurationMinutes мин</span><h3>@Service.Name <span aria-hidden="true">↗</span></h3><p>@Service.Summary</p><span class="price">от @Service.Price.ToString("N0") ₽</span></div></a>
+@code {
+    [Parameter, EditorRequired] public FitnessService Service { get; set; } = null!;
+    [Parameter] public bool Figma { get; set; }
+
+    private string Image => (Figma, Service.Name, Service.Image) switch
+    {
+        (true, "Тренажёрный зал", "/images/club.jpg") => "/images/figma/service-gym.webp",
+        (true, "Йога", "/images/service-yoga.webp") => "/images/figma/service-yoga.webp",
+        _ => Service.Image
+    };
+}

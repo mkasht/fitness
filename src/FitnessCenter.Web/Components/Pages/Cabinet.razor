@@ -1,0 +1,20 @@
+@page "/cabinet"
+@attribute [Authorize]
+@using Microsoft.EntityFrameworkCore
+@inject BookingService BookingService
+@inject AuthenticationStateProvider Authentication
+@inject IDbContextFactory<ApplicationDbContext> Factory
+@inject ClubClock Clock
+<PageTitle>Личный кабинет · Пульс</PageTitle>
+<section class="container section page-top"><span class="eyebrow">Твой Пульс</span><h1>ПРИВЕТ, @name.ToUpper()!</h1>
+<div class="cabinet-nav"><a class="text-link" href="/booking">Найти тренировку ↗</a><a class="text-link" href="/profile">Настройки профиля</a><AuthorizeView Roles="@Roles.Staff"><Authorized><a class="text-link" href="/staff">Панель управления</a></Authorized></AuthorizeView><form action="/Account/Logout" method="post"><AntiforgeryToken /><input type="hidden" name="returnUrl" value="" /><button class="link-button" type="submit">Выйти</button></form></div>
+@if (result is not null) { <div class="notice @(result.Success ? "" : "error")" role="status">@result.Message</div> }
+<div class="dashboard-grid"><div><h2 class="panel-title">Мои тренировки</h2>@if (bookings is null) { <p role="status">Загружаем записи…</p> } else if (bookings.Count == 0) { <div class="empty-state"><h3>Всё начинается с первой тренировки</h3><p>Выбери направление и удобное время.</p><a class="button" href="/booking">Посмотреть расписание ↗</a></div> } else { @foreach (var b in bookings) { <article class="booking-card"><span class="status @b.Status">@b.Status.Label()</span><h3>@b.Session.Service.Name</h3><p>@Clock.Local(b.Session.StartsAtUtc).ToString("d MMMM yyyy, HH:mm") · @b.Session.Trainer.Name</p>@if (!string.IsNullOrWhiteSpace(b.Comment)) { <p>Комментарий: @b.Comment</p> }<div class="row-actions">@if (b.Status.IsActive() && b.Session.StartsAtUtc > DateTime.UtcNow) { <button class="link-button" disabled="@busy" @onclick="() => Cancel(b.Id)">Отменить запись</button> }@if (b.Status == BookingStatus.Attended) { <a class="text-link" href="@($"/reviews?BookingId={b.Id}")">Оставить отзыв</a> }</div></article> } }</div>
+<aside><h2 class="panel-title">Уведомления</h2>@if (notifications.Count == 0) { <p class="small">Здесь появятся изменения статуса записей.</p> } else { @foreach (var n in notifications) { <div class="notification">@n.Text<small>@Clock.Local(n.CreatedAtUtc).ToString("dd MMM, HH:mm")</small></div> }<button class="link-button mt-3" @onclick="MarkRead">Отметить прочитанными</button> }</aside></div></section>
+@code {
+    private ClaimsPrincipal user = new(); private string name = ""; private List<Booking>? bookings; private List<Notification> notifications = []; private OperationResult? result; private bool busy;
+    protected override async Task OnInitializedAsync() { user = (await Authentication.GetAuthenticationStateAsync()).User; await Load(); }
+    private async Task Load() { bookings = await BookingService.MyBookingsAsync(user); var uid = BookingService.UserId(user); await using var db = await Factory.CreateDbContextAsync(); name = (await db.Users.SingleAsync(u => u.Id == uid)).FullName.Split(' ')[0]; notifications = await db.Notifications.AsNoTracking().Where(n => n.UserId == uid && !n.IsRead).OrderByDescending(n => n.CreatedAtUtc).Take(20).ToListAsync(); }
+    private async Task Cancel(int id) { if (busy) return; busy = true; try { result = await BookingService.CancelAsync(user, id); await Load(); } finally { busy = false; } }
+    private async Task MarkRead() { var uid = BookingService.UserId(user); await using var db = await Factory.CreateDbContextAsync(); await db.Notifications.Where(n => n.UserId == uid && !n.IsRead).ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true)); await Load(); }
+}

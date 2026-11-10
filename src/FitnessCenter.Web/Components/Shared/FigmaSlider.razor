@@ -1,0 +1,106 @@
+@implements IDisposable
+
+<section class="figma-slider" aria-label="Предложения клуба"
+         @onmouseenter="() => hovered = true" @onmouseleave="() => hovered = false">
+    <div class="figma-slide @Slide.Style">
+        @if (Slide.Underlay is { } underlay)
+        {
+            <img class="figma-slide-photo" src="@underlay" alt="" />
+        }
+        <img class="figma-slide-photo" src="@Slide.Image" alt="" fetchpriority="@(index == 0 ? "high" : "auto")" />
+        <div class="figma-slide-content">
+            <span class="figma-badge">@(Slide.Label.Length > 0 ? Slide.Label : $"Фитнес-клуб · {Site["Club:City"]}")</span>
+            <h1><span>@Slide.Title</span><span>@Slide.Subtitle</span></h1>
+            <p>@Slide.Description</p>
+            @if (Slide.Href is { Length: > 0 } href)
+            {
+                <a class="figma-pill figma-pill-light" href="@href" @onfocus="PauseForFocus" @onblur="ResumeAfterBlur">
+                    @Slide.Action <span><img src="/images/figma/arrow.svg" alt="" /></span>
+                </a>
+            }
+            else
+            {
+                <button class="figma-pill figma-pill-light" type="button" @onclick="() => Select(0)"
+                        @onfocus="PauseForFocus" @onblur="ResumeAfterBlur">
+                    @Slide.Action <span><img src="/images/figma/arrow.svg" alt="" /></span>
+                </button>
+            }
+        </div>
+    </div>
+    <div class="figma-slide-dots" role="group" aria-label="Выбор слайда">
+        @for (var i = 0; i < slides.Length; i++)
+        {
+            var position = i;
+            <button type="button" aria-label="@($"Слайд {i + 1}: {slides[i].Title}")"
+                    aria-current="@(position == index ? "true" : null)" @onclick="() => Select(position)"
+                    @onfocus="PauseForFocus" @onblur="ResumeAfterBlur"></button>
+        }
+    </div>
+</section>
+
+@code {
+    [CascadingParameter] private SiteContent Site { get; set; } = null!;
+    private static readonly TimeSpan SlideInterval = TimeSpan.FromSeconds(5);
+    private ClubBanner[] slides = [];
+    private ClubBanner Slide => slides[index];
+
+    protected override void OnParametersSet()
+    {
+        slides = SiteContentService.Banners.Select((banner, i) =>
+        {
+            var image = Site[$"Banner:{i}:Image"];
+            return banner with
+            {
+                Label = Site[$"Banner:{i}:Label"],
+                Title = Site[$"Banner:{i}:Title"],
+                Subtitle = Site[$"Banner:{i}:Subtitle"],
+                Description = Site[$"Banner:{i}:Description"],
+                Action = Site[$"Banner:{i}:Action"],
+                Href = Site[$"Banner:{i}:Href"],
+                Image = image,
+                Underlay = image == banner.Image ? banner.Underlay : null
+            };
+        }).ToArray();
+    }
+
+    private int index;
+    private bool hovered;
+    private bool focused;
+    private PeriodicTimer? timer;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (!firstRender) return;
+        timer = new PeriodicTimer(SlideInterval);
+        _ = RotateAsync(timer);
+    }
+
+    private async Task RotateAsync(PeriodicTimer rotation)
+    {
+        while (await rotation.WaitForNextTickAsync())
+        {
+            await InvokeAsync(() =>
+            {
+                if (timer is null || hovered || focused) return;
+                index = (index + 1) % slides.Length;
+                StateHasChanged();
+            });
+        }
+    }
+
+    private void Select(int position)
+    {
+        index = position;
+        if (timer is not null) timer.Period = SlideInterval;
+    }
+
+    private void PauseForFocus() => focused = true;
+    private void ResumeAfterBlur() => focused = false;
+
+    public void Dispose()
+    {
+        timer?.Dispose();
+        timer = null;
+    }
+
+}

@@ -1,0 +1,99 @@
+@inject CatalogService Catalog
+@inject NavigationManager Navigation
+@inject ClubClock Clock
+@inject TimeProvider Time
+
+<form class="quick-form" @onsubmit="Go" @onsubmit:preventDefault>
+    <div>
+        <label for="quick-service">Направление</label>
+        <select id="quick-service" @bind="serviceId" @bind:after="ChangeService">
+            <option value="0">Все направления</option>
+            @foreach (var service in services)
+            {
+                <option value="@service.Id">@service.Name</option>
+            }
+        </select>
+    </div>
+    <div>
+        <label for="quick-trainer">Тренер</label>
+        <select id="quick-trainer" @bind="trainerId" @bind:after="LoadSessions">
+            <option value="0">Любой тренер</option>
+            @foreach (var trainer in trainers.Where(trainer => serviceId == 0 || trainer.Services.Any(service => service.Id == serviceId)))
+            {
+                <option value="@trainer.Id">@trainer.Name · @trainer.Specialty</option>
+            }
+        </select>
+    </div>
+    <div>
+        <label for="quick-date">Дата</label>
+        <input id="quick-date" type="date" @bind="date" @bind:after="LoadSessions" min="@Clock.Now.ToString("yyyy-MM-dd")" required />
+    </div>
+    <div>
+        <label for="quick-session">Время</label>
+        <select id="quick-session" @bind="sessionId" disabled="@(loading || sessions.Count == 0)">
+            <option value="0">@(loading ? "Загружаем…" : sessions.Count == 0 ? "Нет свободного времени" : "Выбери занятие")</option>
+            @foreach (var session in sessions)
+            {
+                <option value="@session.Id">@Clock.Local(session.StartsAtUtc).ToString("HH:mm") · @session.Service.Name · @session.Trainer.Name</option>
+            }
+        </select>
+    </div>
+    <button class="button" type="submit" disabled="@(sessionId == 0 || loading)">Продолжить запись <span aria-hidden="true">↗</span></button>
+    <a class="text-link" href="/booking">Смотреть всё расписание <span aria-hidden="true">↗</span></a>
+</form>
+
+@code {
+    private List<FitnessService> services = [];
+    private List<Trainer> trainers = [];
+    private List<TrainingSession> sessions = [];
+    private DateTime? date;
+    private int serviceId;
+    private int trainerId;
+    private int sessionId;
+    private bool loading = true;
+    private int loadVersion;
+
+    protected override async Task OnInitializedAsync()
+    {
+        date = Clock.Now.Date;
+        services = await Catalog.ServicesAsync();
+        trainers = await Catalog.TrainersAsync();
+        await LoadSessions();
+    }
+
+    private Task ChangeService()
+    {
+        trainerId = 0;
+        return LoadSessions();
+    }
+
+    private async Task LoadSessions()
+    {
+        var version = ++loadVersion;
+        sessionId = 0;
+        sessions = [];
+        if (date is not { } day || day.Date < Clock.Now.Date || day.Date == DateTime.MaxValue.Date)
+        {
+            loading = false;
+            return;
+        }
+
+        loading = true;
+        var start = Clock.Utc(day.Date);
+        var now = Time.GetUtcNow().UtcDateTime;
+        var available = await Catalog.SessionsAsync(start > now ? start : now, Clock.Utc(day.Date.AddDays(1)),
+            serviceId == 0 ? null : serviceId, trainerId == 0 ? null : trainerId);
+        if (version != loadVersion) return;
+
+        sessions = available.Where(session => session.Bookings.Count < session.Capacity).ToList();
+        loading = false;
+    }
+
+    private void Go()
+    {
+        if (date is { } day && sessions.FirstOrDefault(session => session.Id == sessionId) is { } session)
+        {
+            Navigation.NavigateTo($"/booking?ServiceId={session.ServiceId}&TrainerId={session.TrainerId}&Date={day:yyyy-MM-dd}&SessionId={session.Id}#booking-confirm");
+        }
+    }
+}

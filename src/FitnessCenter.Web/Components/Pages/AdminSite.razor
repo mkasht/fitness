@@ -1,0 +1,136 @@
+@page "/admin/site"
+@attribute [Authorize(Roles = Roles.Admin)]
+@inject SiteContentService Content
+@inject AuthenticationStateProvider Authentication
+
+<PageTitle>Контент и настройки · Пульс</PageTitle>
+<section class="container section page-top">
+    <span class="eyebrow">Администрирование</span>
+    <h1>Контент и настройки</h1>
+    <AdminLinks />
+    <label for="content-section">Раздел сайта</label>
+    <select id="content-section" @bind="section" @bind:after="Load" disabled="@busy">
+        @for (var index = 0; index < SiteContentService.Sections.Count; index++)
+        {
+            <option value="@index">@SiteContentService.Sections[index].Label</option>
+        }
+    </select>
+    @if (result is not null)
+    {
+        <p class="notice @(result.Success ? "" : "error")" role="status">@result.Message</p>
+    }
+    @if (values is not null)
+    {
+        <form class="form-panel staff-form" @onsubmit="Save" @onsubmit:preventDefault>
+            <h2>@SiteContentService.Sections[section].Label</h2>
+            @foreach (var field in SiteContentService.Sections[section].Fields)
+            {
+                <label for="@field.Key">@field.Label</label>
+                @if (field.Kind == SiteFieldKind.Paragraph)
+                {
+                    <textarea id="@field.Key" maxlength="2000" @bind="values[field.Key]"></textarea>
+                }
+                else
+                {
+                    <input id="@field.Key" required="@field.Required" maxlength="@(field.Kind == SiteFieldKind.Text ? 200 : 2000)" @bind="values[field.Key]" />
+                }
+                @if (field.Kind == SiteFieldKind.ImagePath)
+                {
+                    <label for="banner-image-file">Или загрузите картинку с компьютера</label>
+                    <InputFile id="banner-image-file" @key="uploadVersion" OnChange="UploadImage" accept="image/jpeg,image/png,image/webp" disabled="@busy" />
+                    <p class="small">JPG, PNG или WebP до 5 МБ.</p>
+                    @if (uploadError is not null)
+                    {
+                        <p class="validation-message" role="alert">@uploadError</p>
+                    }
+                    @if (preview is not null)
+                    {
+                        <img class="catalog-image-preview" src="@preview" alt="Предпросмотр баннера" />
+                    }
+                    @if (imageContent is not null || uploadError is not null)
+                    {
+                        <button type="button" class="link-button" disabled="@busy" @onclick="ClearUpload">Отменить загрузку</button>
+                    }
+                }
+            }
+            <button class="button" type="submit" disabled="@(busy || uploadError is not null)">Сохранить изменения</button>
+        </form>
+    }
+</section>
+
+@code {
+    private int section;
+    private bool busy;
+    private ClaimsPrincipal actor = new();
+    private Dictionary<string, string>? values;
+    private OperationResult? result;
+    private byte[]? imageContent;
+    private string? uploadError, preview;
+    private int uploadVersion;
+
+    protected override async Task OnInitializedAsync()
+    {
+        actor = (await Authentication.GetAuthenticationStateAsync()).User;
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        var requested = section;
+        values = null;
+        result = null;
+        ClearUpload();
+        var content = await Content.ReadAsync();
+        if (requested == section)
+            values = SiteContentService.Sections[section].Fields.ToDictionary(f => f.Key, f => content[f.Key]);
+    }
+
+    private async Task Save()
+    {
+        if (busy || values is null || uploadError is not null) return;
+        busy = true;
+        try
+        {
+            result = await Content.SaveAsync(actor, section, values, imageContent);
+            if (!result.Success || imageContent is null) return;
+            var saved = result;
+            await Load();
+            result = saved;
+        }
+        finally { busy = false; }
+    }
+
+    private async Task UploadImage(InputFileChangeEventArgs args)
+    {
+        if (busy) return;
+        busy = true;
+        imageContent = null;
+        preview = uploadError = null;
+        try
+        {
+            if (args.File.Size <= CatalogImage.MaxBytes)
+            {
+                await using var stream = args.File.OpenReadStream(CatalogImage.MaxBytes);
+                using var buffer = new MemoryStream();
+                await stream.CopyToAsync(buffer);
+                var bytes = buffer.ToArray();
+                if (CatalogImage.DetectContentType(bytes) is { } format)
+                {
+                    imageContent = bytes;
+                    preview = $"data:{format};base64,{Convert.ToBase64String(bytes)}";
+                    return;
+                }
+            }
+            uploadError = "Выберите изображение JPG, PNG или WebP до 5 МБ.";
+        }
+        catch (IOException) { uploadError = "Не удалось прочитать файл. Выберите его ещё раз."; }
+        finally { busy = false; }
+    }
+
+    private void ClearUpload()
+    {
+        imageContent = null;
+        uploadError = preview = null;
+        uploadVersion++;
+    }
+}

@@ -1,0 +1,76 @@
+@font-face {
+    font-family: "Golos Text";
+    src: url("fonts/golos-text-cyrillic.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 400 900;
+    font-display: swap;
+    unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
+@font-face {
+    font-family: "Golos Text";
+    src: url("fonts/golos-text-latin.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 400 900;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+        U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+        U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+    --bg: #fffaf0;
+    --ink: #292b2d;
+    --sage: #b9c1aa;
+    --signal: #fe632c;
+    --dark: var(--ink);
+    --muted: #575b53;
+    --accent: #a63416;
+    --line: #d8d5c8;
+    --soft: #efeee1;
+    --signal-hover: #ff7e4f;
+    --display: "ABC Repro Cyrillic", "ABC Repro Cyrillic Trial", "ABC Repro", "Golos Text", "Segoe UI", sans-serif;
+}
+
+body, .brand-caption { font-family: var(--display); }
+
+.account-link {
+    background: var(--sage);
+    border-color: var(--sage);
+}
+
+.club-slide { border-bottom: 8px solid var(--sage); }
+.club-slide::after {
+    background: radial-gradient(ellipse at center, #292b2dec 0%, #292b2db5 44%, #292b2d36 92%);
+}
+.slide-copy .eyebrow, .booking-preview .eyebrow { color: var(--sage); }
+.slide-copy p, .booking-preview p { color: var(--bg); }
+.slide-copy h1 { letter-spacing: -.055em; }
+
+.home-about, .club-contact { background: var(--sage); }
+.home-about p, .club-contact dt { color: var(--ink); }
+.home-about .eyebrow, .home-about .text-link:hover { color: var(--ink); }
+.home-about :focus-visible { outline-color: var(--ink); }
+.trainer-image { aspect-ratio: 1.7; }
+.trainer-image img,
+.trainer-image img[src$="/trainer-swimming.webp"],
+.trainer-detail .detail-image,
+.trainer-detail .detail-image[src$="/trainer-swimming.webp"] {
+    object-position: center top;
+}
+.trainer-detail .detail-image { height: auto; aspect-ratio: 1.45; }
+.trainer-info .round-arrow { background: var(--sage); border-color: var(--sage); }
+
+.site-footer {
+    background: var(--dark);
+    color: var(--bg);
+    border-top-color: var(--dark);
+}
+.site-footer p, .site-footer .brand-caption, .site-footer .footer-bottom { color: var(--sage); }
+.site-footer .footer-bottom { border-top-color: #62675d; }
+.site-footer a:hover { color: var(--signal); }
+.site-footer :focus-visible { outline-color: var(--signal); }
+
+@media (max-width: 640px) {
+    .trainer-grid { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,29 @@
+
+<dl class="club-contact">
+    <dt>Адрес</dt>
+    <dd>@(Site["Club:Address"])</dd>
+    <dt>Телефон</dt>
+    <dd>
+        @if (Site["Club:Phone"] is { Length: > 0 } phone)
+        {
+            <a href="tel:@phone">@phone</a>
+        }
+        else if (Site["Club:DemoPhone"] is { Length: > 0 } demoPhone)
+        {
+            <span>@demoPhone · учебный пример</span>
+        }
+        else
+        {
+            <span>Уточняется</span>
+        }
+    </dd>
+    @if (Site["Club:Email"] is { Length: > 0 } email)
+    {
+        <dt>Email</dt>
+        <dd><a href="@($"mailto:{email}")">@email</a></dd>
+    }
+    <dt>Часы работы</dt>
+    <dd>@(Site["Club:Hours"])</dd>
+</dl>
+
+@code { [CascadingParameter] private SiteContent Site { get; set; } = null!; }

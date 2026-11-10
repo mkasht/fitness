@@ -1,0 +1,5 @@
+@page "/trainers/{Id:int}"
+@inject CatalogService Catalog
+<PageTitle>@(trainer?.Name ?? "Тренер") · Пульс</PageTitle>
+<section class="container section page-top">@if (loading) { <p role="status">Загружаем профиль…</p> } else if (trainer is null) { <h1>Тренер не найден</h1><a href="/trainers">Все тренеры</a> } else { <a href="/trainers" class="breadcrumb">← Все тренеры</a><div class="detail-grid trainer-detail"><div><span class="eyebrow">@trainer.Specialty</span><h1>@trainer.Name.ToUpper()</h1>@if (trainer.ExperienceYears > 0) { <p class="page-lead">Опыт работы: @trainer.ExperienceYears лет</p> }<p>@trainer.Biography</p><h3>Направления</h3><div class="tag-list">@foreach (var s in trainer.Services) { <a href="@($"/services/{s.Id}")">@s.Name ↗</a> }</div><a class="button" href="@($"/booking?TrainerId={Id}")">Записаться к тренеру ↗</a></div><img class="detail-image" src="@trainer.Image" alt="@trainer.Name" /></div> }</section>
+@code { [Parameter] public int Id { get; set; } private Trainer? trainer; private bool loading = true; protected override async Task OnParametersSetAsync() { loading = true; trainer = await Catalog.TrainerAsync(Id); loading = false; } }

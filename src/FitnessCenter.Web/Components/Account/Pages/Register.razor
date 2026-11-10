@@ -1,0 +1,37 @@
+@page "/Account/Register"
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IdentityRedirectManager RedirectManager
+<PageTitle>Регистрация · Пульс</PageTitle>
+<section class="container section page-top auth-shell"><div class="auth-aside"><span class="eyebrow">Первый шаг к движению</span><h1>НАЧИНАЕТСЯ<br />С ТЕБЯ</h1><p>Создай аккаунт, чтобы выбирать занятия, записываться к тренерам и видеть свою историю.</p><img src="/images/pool.jpg" alt="Бассейн клуба" /></div><div class="form-panel"><h2>Создать аккаунт</h2>@if (error is not null) { <div class="notice error" role="alert">@error</div> }
+<EditForm Model="Input" method="post" FormName="register" OnValidSubmit="RegisterUser"><DataAnnotationsValidator /><ValidationSummary />
+<label for="register-name">Как тебя зовут</label><InputText id="register-name" @bind-Value="Input.Name" autocomplete="name" />
+<label for="register-email">Email</label><InputText id="register-email" @bind-Value="Input.Email" type="email" autocomplete="email" />
+<label for="register-password">Пароль</label><InputText id="register-password" @bind-Value="Input.Password" type="password" autocomplete="new-password" /><p class="small">От 8 символов: заглавная и строчная латинские буквы, цифра и специальный символ.</p>
+<label for="register-confirm">Повтори пароль</label><InputText id="register-confirm" @bind-Value="Input.Confirm" type="password" autocomplete="new-password" />
+<button type="submit" class="button">Зарегистрироваться ↗</button></EditForm><p class="form-note">Уже есть аккаунт? <a class="text-link" href="@($"/Account/Login?ReturnUrl={Uri.EscapeDataString(ReturnUrl ?? "/cabinet")}")">Войти</a></p></div></section>
+@code {
+    [SupplyParameterFromForm] private InputModel Input { get; set; } = default!;
+    protected override void OnInitialized() => Input ??= new();
+    [SupplyParameterFromQuery] private string? ReturnUrl { get; set; }
+    private string? error;
+    private async Task RegisterUser()
+    {
+        var user = new ApplicationUser { UserName = Input.Email.Trim(), Email = Input.Email.Trim(), FullName = Input.Name.Trim() };
+        var result = await UserManager.CreateAsync(user, Input.Password);
+        if (!result.Succeeded) { error = "Не удалось создать аккаунт. Проверьте требования к паролю или используйте другой email."; return; }
+        var roleResult = await UserManager.AddToRoleAsync(user, Roles.User);
+        if (!roleResult.Succeeded) { await UserManager.DeleteAsync(user); error = "Не удалось создать аккаунт. Попробуйте ещё раз."; return; }
+        await SignInManager.SignInAsync(user, isPersistent: false);
+        RedirectManager.RedirectTo(ReturnUrl ?? "/cabinet");
+    }
+    private sealed class InputModel {
+        [Required(ErrorMessage = "Укажите имя"), StringLength(100)] public string Name { get; set; } = "";
+        [Required(ErrorMessage = "Укажите email"), EmailAddress(ErrorMessage = "Проверьте email")] public string Email { get; set; } = "";
+        [Required(ErrorMessage = "Придумайте пароль"), StringLength(100, MinimumLength = 8, ErrorMessage = "Пароль должен содержать от 8 до 100 символов")] public string Password { get; set; } = "";
+        [Compare(nameof(Password), ErrorMessage = "Пароли не совпадают")] public string Confirm { get; set; } = "";
+    }
+}
+

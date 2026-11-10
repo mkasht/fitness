@@ -1,0 +1,53 @@
+@page "/Account/Login"
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IdentityRedirectManager RedirectManager
+<PageTitle>Вход · Пульс</PageTitle>
+<section class="container section page-top auth-shell login-shell">
+    <div class="auth-aside">
+        <span class="eyebrow">Твой личный ритм</span>
+        <div class="login-intro">
+            <h1>РАДЫ ВИДЕТЬ<br />ТЕБЯ СНОВА</h1>
+            <p>Войди, чтобы записываться на тренировки и следить за своими занятиями.</p>
+            <img src="/images/club.jpg" alt="Тренажёрный зал Пульс" />
+        </div>
+    </div>
+    <div class="form-panel">
+        <h2>Вход в кабинет</h2>
+        @if (error is not null)
+        {
+            <div class="notice error" role="alert">@error</div>
+        }
+        <EditForm Model="Input" method="post" FormName="login" OnValidSubmit="LoginUser">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <label for="login-email">Email</label>
+            <InputText id="login-email" @bind-Value="Input.Email" type="email" autocomplete="username" />
+            <label for="login-password">Пароль</label>
+            <InputText id="login-password" @bind-Value="Input.Password" type="password" autocomplete="current-password" />
+            <label class="check-label"><InputCheckbox @bind-Value="Input.RememberMe" />Запомнить меня</label>
+            <button type="submit" class="button">Войти ↗</button>
+        </EditForm>
+        <p class="form-note">Впервые в Пульсе? <a class="text-link" href="@($"/Account/Register?ReturnUrl={Uri.EscapeDataString(ReturnUrl ?? "/cabinet")}")">Создать аккаунт</a></p>
+    </div>
+</section>
+@code {
+    private string? error;
+    [SupplyParameterFromForm] private InputModel Input { get; set; } = default!;
+    protected override void OnInitialized() => Input ??= new();
+    [SupplyParameterFromQuery] private string? ReturnUrl { get; set; }
+    private async Task LoginUser()
+    {
+        var result = await SignInManager.PasswordSignInAsync(Input.Email.Trim(), Input.Password, Input.RememberMe, lockoutOnFailure: true);
+        if (result.Succeeded) RedirectManager.RedirectTo(ReturnUrl ?? "/cabinet");
+        else if (result.RequiresTwoFactor) RedirectManager.RedirectTo("Account/LoginWith2fa", new() { ["returnUrl"] = ReturnUrl, ["rememberMe"] = Input.RememberMe });
+        else error = result.IsLockedOut ? "Слишком много попыток. Повторите вход через несколько минут." : "Не удалось войти. Проверьте email и пароль.";
+    }
+    private sealed class InputModel {
+        [Required(ErrorMessage = "Укажите email"), EmailAddress(ErrorMessage = "Проверьте email")] public string Email { get; set; } = "";
+        [Required(ErrorMessage = "Введите пароль")] public string Password { get; set; } = "";
+        public bool RememberMe { get; set; }
+    }
+}
+

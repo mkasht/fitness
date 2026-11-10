@@ -1,0 +1,19 @@
+<a class="trainer-card @(RoundPortrait ? "trainer-card-round" : null)" href="@($"/trainers/{Trainer.Id}")">
+    <div class="trainer-image"><img src="@Trainer.Image" alt="" loading="lazy" /></div>
+    <div class="trainer-info">
+        <div><h3>@Trainer.Name</h3><p>@Trainer.Specialty</p></div>
+        @if (!RoundPortrait)
+        {
+            <span class="round-arrow" aria-hidden="true">↗</span>
+        }
+    </div>
+    @if (RoundPortrait)
+    {
+        <span class="figma-trainer-more" aria-hidden="true">Подробнее</span>
+    }
+</a>
+
+@code {
+    [Parameter, EditorRequired] public Trainer Trainer { get; set; } = null!;
+    [Parameter] public bool RoundPortrait { get; set; }
+}

@@ -1,0 +1,43 @@
+# Сборки и локальные инструменты
+**/bin/
+**/obj/
+.vs/
+.idea/
+.dotnet/
+.packages/
+.artifacts/
+TestResults/
+node_modules/
+*.user
+*.suo
+*.log
+*.zip
+*.tar.gz
+
+# Базы данных и локальные настройки
+*.mdf
+*.ldf
+*.bak
+App_Data/
+appsettings.Local.json
+appsettings.*.local.json
+demo-accounts.txt
+
+# Доступы и настройки хостинга
+.env
+.env.*
+!.env.example
+.layero/
+.ssh/
+known_hosts*
+server-access.txt
+id_ed25519*
+id_rsa*
+*.key
+*.pem
+*.pfx
+*.p12
+
+# Локальное задание и временные файлы Office
+/praktika.docx
+~$*

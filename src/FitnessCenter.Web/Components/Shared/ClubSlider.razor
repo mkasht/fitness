@@ -1,0 +1,26 @@
+
+<section class="club-slide" aria-labelledby="club-banner-title">
+    <img class="club-slide-photo strength-slide" src="@LeadImage" alt="" fetchpriority="high" />
+    <img class="club-slide-photo studio-slide" src="/images/pulse-studio.webp" alt="" fetchpriority="low" />
+    <img class="club-slide-photo pool-slide" src="/images/pool.jpg" alt="" fetchpriority="low" />
+    <div class="container slide-inner">
+        <div class="slide-copy">
+            <span class="eyebrow">Фитнес-клуб · @Site["Club:City"]</span>
+            <h1 id="club-banner-title">@Site["Banner:0:Title"] <span>@Site["Banner:0:Subtitle"]</span></h1>
+            <p>@Site["Banner:0:Description"]</p>
+            @if (Site["Banner:0:Href"] is { Length: > 0 } href)
+            {
+                <a class="button slide-action" href="@href">@Site["Banner:0:Action"] <span aria-hidden="true">↗</span></a>
+            }
+        </div>
+        <svg class="slide-track" viewBox="0 0 280 192" fill="none" aria-hidden="true">
+            <path d="M4 186L106 4H166L64 186H4ZM86 186L188 4H248L146 186H86ZM168 186L270 4" />
+        </svg>
+    </div>
+</section>
+
+@code {
+    [CascadingParameter] private SiteContent Site { get; set; } = null!;
+    private string LeadImage => Site["Banner:0:Image"] == SiteContentService.Banners[0].Image
+        ? "/images/pulse-strength.webp" : Site["Banner:0:Image"];
+}

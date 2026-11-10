@@ -1,0 +1,233 @@
+.figma-main:not(:has(.figma-home)) {
+    --bg: #fff;
+    --ink: var(--figma-ink);
+    --muted: #50545a;
+    --accent: var(--figma-red-dark);
+    --soft: var(--figma-panel);
+    --line: #d9dce0;
+    --signal: #d21f26;
+    --signal-hover: var(--figma-red-dark);
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 45vh;
+}
+
+.figma-main .page-top {
+    width: var(--figma-width);
+    padding-block: clamp(38px, 5.25vw, 84px) clamp(54px, 7vw, 110px);
+}
+
+.figma-main .page-top h1,
+.figma-main > h1,
+.figma-main .identity-settings h1 {
+    color: var(--figma-ink);
+    font-size: clamp(2.05rem, 4.35vw, 4.25rem);
+    font-weight: 450;
+    letter-spacing: -.062em;
+    line-height: 1.02;
+    text-transform: uppercase;
+}
+
+.figma-main .page-top h2,
+.figma-main .identity-settings h2 {
+    font-weight: 550;
+    letter-spacing: -.045em;
+}
+
+.figma-main .page-top .eyebrow {
+    margin-bottom: 10px;
+    color: var(--figma-red-dark);
+    font-size: .78rem;
+    font-weight: 550;
+    letter-spacing: .025em;
+    text-transform: none;
+}
+
+.figma-main .page-lead { max-width: 62ch; color: var(--muted); }
+.figma-main .page-top :focus-visible { outline-color: var(--figma-red-dark); }
+.figma-main .breadcrumb { margin-bottom: clamp(18px, 3vw, 35px); }
+.figma-main .breadcrumb:hover, .figma-main .text-link:hover { color: var(--figma-red-dark); }
+
+.figma-main:not(:has(.figma-home)) :is(.button, .btn-primary) {
+    justify-content: center;
+    border-radius: 100px;
+    color: #fff;
+    font-weight: 550;
+    text-align: center;
+}
+
+.figma-main:not(:has(.figma-home)) .button-outline {
+    color: var(--ink);
+    border-color: var(--line);
+}
+
+.figma-main:not(:has(.figma-home)) .button-outline:hover {
+    color: #fff;
+    border-color: var(--ink);
+}
+
+.figma-main :is(.filter-tabs, .day-tabs) button {
+    border-radius: 100px;
+    color: var(--ink);
+    background: var(--soft);
+    border-color: transparent;
+}
+
+.figma-main .day-tabs button { border-radius: 10px; }
+.figma-main :is(.filter-tabs, .day-tabs) button.selected {
+    background: var(--signal);
+    color: #fff;
+}
+
+.figma-main .page-top.figma-services .service-card {
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+}
+.figma-main .page-top.figma-services .service-card h3 span { display: inline; color: var(--figma-red-dark); }
+.figma-main .page-top.figma-services .service-card:hover h3 { color: var(--figma-red-dark); }
+
+.figma-main .detail-grid { gap: clamp(24px, 5vw, 72px); }
+.figma-main .detail-image {
+    height: auto;
+    aspect-ratio: 928 / 659;
+    border-radius: 12px;
+}
+.figma-main .trainer-detail .detail-image {
+    width: min(100%, 530px);
+    aspect-ratio: 1;
+    object-position: center;
+    justify-self: center;
+}
+.figma-main .tag-list a, .figma-main .detail-facts > * {
+    padding: 8px 14px;
+    border-radius: 100px;
+    background: var(--soft);
+}
+.figma-main .detail-facts { flex-wrap: wrap; gap: 8px; }
+.figma-main .subsection-title { margin-bottom: 24px; }
+
+.figma-main .about-sections { gap: clamp(12px, 1.5vw, 24px); }
+.figma-main .about-sections > div {
+    padding: clamp(18px, 2.6vw, 36px);
+    border: 0;
+    border-radius: 12px;
+    background: var(--soft);
+}
+.figma-main .figma-trainers-page .page-lead { margin-inline: auto; }
+.figma-main .figma-trainers-page .page-lead + div { margin-top: clamp(24px, 4vw, 52px); }
+.figma-trainers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 145px), 200px));
+    justify-content: center;
+    gap: 20px;
+}
+
+.figma-main .booking-filters {
+    padding: clamp(16px, 3vw, 38px);
+    margin-bottom: 24px;
+    border-radius: 12px;
+    background: linear-gradient(110deg, #171717e6, #17171799), url("images/figma/booking-gym.webp") center 45% / cover;
+}
+.figma-main .booking-filters label { color: #fff; }
+.figma-main .booking-filters :is(select, input) { margin-bottom: 0; }
+.figma-main :is(.session-row, .booking-confirm, .empty-state, .booking-card, .form-panel) {
+    border-radius: 12px;
+}
+.figma-main .session-row {
+    grid-template-columns: 95px minmax(0, 1.4fr) minmax(0, 1fr) minmax(66px, auto) auto;
+}
+.figma-main .session-row.selected-session { border-color: var(--figma-red); }
+.figma-main .dashboard-grid > aside {
+    align-self: start;
+    padding: clamp(18px, 2.6vw, 30px);
+    border-radius: 12px;
+    background: var(--soft);
+}
+.figma-main .cabinet-nav { padding-block: 12px; border-bottom: 1px solid var(--line); }
+.figma-main .cabinet-nav a, .figma-main .cabinet-nav button { min-height: 28px; }
+
+.figma-main .reviews-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 255px), 1fr));
+    gap: clamp(12px, 1.3vw, 20px);
+}
+.figma-main .review-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: clamp(15px, 2vw, 25px);
+    border: 1px solid #ebebeb;
+    border-radius: 16px;
+    box-shadow: 0 4px 5px #0002;
+    overflow-wrap: anywhere;
+}
+.figma-main .review-card .rating { color: #8b5e00; }
+.figma-main .review-card p { margin-top: auto; color: var(--muted); }
+.figma-main .review-card:target { outline: 2px solid var(--figma-red); }
+
+.figma-main .contact-grid { align-items: start; gap: clamp(24px, 4vw, 55px); }
+.figma-main .contact-grid .club-contact {
+    display: grid;
+    grid-template-columns: minmax(76px, 100px) minmax(0, 1fr);
+    gap: 12px;
+    padding: clamp(16px, 2.4vw, 32px);
+    border-radius: 12px;
+    background: var(--soft);
+}
+.figma-main .contact-grid .club-contact dd { margin: 0; }
+.figma-main .club-map iframe { border-radius: 12px; }
+
+.figma-main .auth-shell { max-width: 1060px; column-gap: clamp(26px, 5vw, 72px); }
+.figma-main .auth-aside img { border-radius: 12px; }
+.figma-main .form-panel { padding: clamp(20px, 3vw, 38px); background: #fff; }
+.figma-main .login-shell .form-panel { align-self: start; }
+.figma-main .login-intro img { margin-top: 12px; }
+.figma-main:not(:has(.figma-home)) :is(input:not([type="checkbox"], [type="radio"]), select, textarea) {
+    border-color: var(--line);
+    border-radius: 8px;
+}
+.figma-main input[type="checkbox"], .figma-main input[type="radio"] { accent-color: var(--signal); }
+
+.figma-main .table-wrap { border: 1px solid var(--line); border-radius: 12px; }
+.figma-main .table-wrap tbody tr:last-child td { border-bottom: 0; }
+.figma-main .staff-tabs button.selected { color: var(--figma-red-dark); border-color: var(--figma-red); }
+.figma-main .identity-settings {
+    width: var(--figma-width);
+    margin-inline: auto;
+    padding-block: clamp(38px, 5vw, 80px);
+}
+.figma-main .identity-settings-grid {
+    display: grid;
+    grid-template-columns: minmax(165px, 1fr) minmax(0, 3fr);
+    align-items: start;
+    gap: clamp(16px, 3vw, 36px);
+    margin: 0;
+}
+.figma-main .identity-settings-grid > * { width: auto; min-width: 0; }
+.figma-main .identity-settings-grid .nav { margin: 0; padding: 12px; border-radius: 12px; background: var(--soft); }
+.figma-main .identity-settings-grid .nav-link { display: block; padding: 8px 12px; border-radius: 100px; }
+.figma-main .identity-settings-grid .nav-link.active { background: var(--signal); color: #fff; }
+.figma-main > :is(h1, h2, p, .row, form) { width: var(--figma-width); margin-inline: auto; }
+.figma-main > h1:first-child { padding-top: clamp(32px, 5vw, 72px); }
+
+.site-footer.figma-footer { color: var(--figma-ink); background: var(--figma-panel); border-color: #e2e3e5; }
+.figma-footer .container { width: var(--figma-width); }
+.figma-footer p, .figma-footer .footer-bottom { color: #50545a; }
+.figma-footer .footer-bottom { border-color: #d9dce0; }
+.figma-footer a:hover { color: var(--figma-red-dark); }
+
+@media (min-width: 641px) {
+    .figma-main .about-page .detail-image { grid-area: 1 / 1; }
+    .figma-main .about-page .detail-grid > div { grid-area: 1 / 2; }
+    .figma-main .login-shell .auth-aside .eyebrow { margin-top: 0; }
+}
+
+@media (max-width: 780px) {
+    .figma-main .session-row { grid-template-columns: 66px minmax(0, 1fr); }
+    .figma-main .session-row > :is(p, .session-places, .button) { grid-column: 2; }
+    .figma-main .session-row > .button { justify-self: start; }
+}
+
+@media (max-width: 640px) {
+    .figma-main :is(.about-sections, .identity-settings-grid) { grid-template-columns: minmax(0, 1fr); }
+    .figma-main .figma-trainers-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

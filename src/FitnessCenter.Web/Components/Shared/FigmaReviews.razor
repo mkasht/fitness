@@ -1,0 +1,76 @@
+@inject ClubClock Clock
+
+<section class="figma-section figma-reviews" aria-labelledby="figma-reviews-title">
+    <h2 id="figma-reviews-title">@Site["Home:ReviewsHeading"]</h2>
+    <div class="figma-review-summary">
+        <a href="/reviews">Все отзывы</a>
+        @if (Summary.Count > 0)
+        {
+            var average = Summary.AverageRating.ToString("0.0");
+            <span class="figma-review-average" aria-label="Средняя оценка @average из 5">
+                <img src="/images/figma/review-star.svg" alt="" />
+                @average
+            </span>
+        }
+    </div>
+    @if (Reviews is null)
+    {
+        <p role="status">Загружаем отзывы…</p>
+    }
+    else if (Reviews.Count == 0)
+    {
+        <p>@(Summary.Count == 0 ? "Пока отзывов нет. Поделиться впечатлениями можно после посещения клуба." : "Подборка для главной ещё не собрана. Все опубликованные отзывы доступны в разделе отзывов.")</p>
+    }
+    else
+    {
+        <p class="figma-review-count">
+            Опубликованные отзывы · @Summary.Count.ToString("N0")
+            @if (Reviews.Any(DemoReviews.IsSampleReview))
+            {
+                <span> · В ленте есть демо-отзывы</span>
+            }
+        </p>
+        <pulse-review-carousel>
+            <div class="figma-review-list" id="figma-review-list" role="region" aria-label="Лента отзывов" tabindex="0">
+                @foreach (var review in Reviews)
+                {
+                    var date = Clock.Local(review.CreatedAtUtc);
+                    <article class="figma-review" @key="review.Id">
+                        <header class="figma-review-header">
+                            <span class="figma-review-avatar" aria-hidden="true"></span>
+                            <div>
+                                <div class="figma-review-stars" role="img" aria-label="Оценка @review.Rating из 5">
+                                    @for (var star = 1; star <= 5; star++)
+                                    {
+                                        <img class="@(star > review.Rating ? "unfilled" : null)" src="/images/figma/review-star.svg" alt="" />
+                                    }
+                                </div>
+                                <strong>@review.Booking.User.FullName</strong>
+                                <time datetime="@date.ToString("yyyy-MM-dd")">@date.ToString("d MMM yyyy 'г.'")</time>
+                            </div>
+                        </header>
+                        <blockquote>@review.Text</blockquote>
+                        <a class="figma-review-more" href="@($"/reviews?reviewId={review.Id}#review-{review.Id}")" aria-label="Читать отзыв пользователя @review.Booking.User.FullName">
+                            <span><img src="/images/figma/logo.svg" alt="" /></span>
+                            Читать
+                        </a>
+                    </article>
+                }
+            </div>
+            <div class="figma-review-controls" hidden>
+                <button type="button" aria-label="Предыдущий отзыв" aria-controls="figma-review-list" disabled>
+                    <img src="/images/figma/review-prev.svg" alt="" />
+                </button>
+                <button type="button" aria-label="Следующий отзыв" aria-controls="figma-review-list">
+                    <img src="/images/figma/review-next.svg" alt="" />
+                </button>
+            </div>
+        </pulse-review-carousel>
+    }
+</section>
+
+@code {
+    [CascadingParameter] private SiteContent Site { get; set; } = null!;
+    [Parameter] public IReadOnlyList<Review>? Reviews { get; set; }
+    [Parameter] public (int Count, double AverageRating) Summary { get; set; }
+}

@@ -1,0 +1,42 @@
+@page "/about"
+@inject IConfiguration Configuration
+
+<PageTitle>О фитнес-центре · Пульс</PageTitle>
+
+<section class="container section page-top about-page">
+    <span class="eyebrow">О фитнес-центре</span>
+    <h1>@Site["About:Title"]</h1>
+    <div class="detail-grid">
+        <div>
+            <p class="page-lead">@Site["About:Lead"]</p>
+            <a class="button" href="/booking">Найти тренировку <span aria-hidden="true">↗</span></a>
+        </div>
+        <img class="detail-image" src="@(Configuration["Design:Variant"] == "Palette" ? "/images/figma/about-gym.webp" : "/images/club.jpg")" alt="Тренажёрный зал клуба Пульс" />
+    </div>
+    <div class="about-sections">
+        <div>
+            <span class="eyebrow">01 / История</span>
+            <h2>@Site["About:HistoryTitle"]</h2>
+            <p>@Site["About:History"]</p>
+        </div>
+        <div>
+            <span class="eyebrow">02 / Миссия</span>
+            <h2>@Site["About:MissionTitle"]</h2>
+            <p>@Site["About:Mission"]</p>
+        </div>
+        <div>
+            <span class="eyebrow">03 / Инфраструктура</span>
+            <h2>@Site["About:SpaceTitle"]</h2>
+            <p>@Site["About:Space"]</p>
+            <a class="text-link" href="/services">Смотреть услуги <span aria-hidden="true">↗</span></a>
+        </div>
+        <div>
+            <span class="eyebrow">04 / Команда</span>
+            <h2>@Site["About:TeamTitle"]</h2>
+            <p>@Site["About:Team"]</p>
+            <a class="text-link" href="/trainers">Познакомиться с тренерами <span aria-hidden="true">↗</span></a>
+        </div>
+    </div>
+</section>
+
+@code { [CascadingParameter] private SiteContent Site { get; set; } = null!; }
